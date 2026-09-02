@@ -30,6 +30,10 @@ export function createLocalRepository(storage: StorageLike): DominoRepository {
         migrated = true
         return { ...player, catchphrase: 'O bem prevalece.' }
       }
+      if (player.id === 'machilas' && player.photoUrl.includes('dicebear.com/9.x/thumbs/svg?seed=Machilas')) {
+        migrated = true
+        return { ...player, photoUrl: 'assets/machilas.png' }
+      }
       return player
     })
     if (migrated) write(PLAYERS_KEY, nextPlayers)
