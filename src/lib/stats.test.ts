@@ -30,12 +30,20 @@ describe('estatísticas das sete partidas iniciais', () => {
     ])
   })
 
-  it('leva a frase opcional do jogador para o ranking', () => {
-    expect(getIndividualStats(seedPlayers, seedGames)[0]).toMatchObject({
-      name: 'César',
-      catchphrase: 'O bem prevalece.',
-    })
+it('leva a frase opcional do jogador para o ranking', () => {
+  const playersWithCatchphrase = seedPlayers.map((player) =>
+    player.id === 'cesar'
+      ? { ...player, catchphrase: 'O bem prevalece.' }
+      : player,
+  )
+
+  expect(
+    getIndividualStats(playersWithCatchphrase, seedGames)[0],
+  ).toMatchObject({
+    name: 'César',
+    catchphrase: 'O bem prevalece.',
   })
+})
 
   it('desempata partidas do mesmo minuto pela criação e pelo id', () => {
     const playedAt = '2026-09-02T14:00:00-03:00'
