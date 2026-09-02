@@ -19,10 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-    env:
-      VITE_SHARED_PIN: ${{ vars.VITE_SHARED_PIN || '1234' }}
-      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -34,6 +30,8 @@ jobs:
       - run: npm run lint
       - run: npm run build
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

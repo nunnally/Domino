@@ -49,8 +49,7 @@ O workflow em `.github/workflows/deploy.yml` publica automaticamente cada push n
 No repositório do GitHub:
 
 1. Em **Settings → Pages**, escolha **GitHub Actions** como source.
-2. Em **Settings → Secrets and variables → Actions**, cadastre os secrets `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`.
-3. Opcionalmente, crie a variável `VITE_SHARED_PIN`; sem ela, o deploy usa `1234`.
-4. Faça push para `main` e acompanhe o workflow **Deploy GitHub Pages**.
+2. Confira as configurações públicas em `.env.production`. A chave publishable e o PIN ficam visíveis no frontend por definição; nenhum token administrativo ou senha do banco é versionado.
+3. Faça push para `main` e acompanhe o workflow **Deploy GitHub Pages**.
 
 O app usa navegação por hash e caminhos relativos, portanto funciona em um subdiretório do GitHub Pages sem configuração adicional.
