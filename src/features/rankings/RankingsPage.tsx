@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Flame, Trash2 } from "lucide-react";
+import { ArrowDown, Flame, Trash2 } from "lucide-react";
 
 import { DominoTile } from "../../components/DominoTile";
 import { PlayerAvatar, type AvatarMood } from "../../components/PlayerAvatar";
@@ -50,9 +50,20 @@ function recordNames<
 export function RankingsPage({ players, games }: RankingsPageProps) {
   const [tab, setTab] = useState<"individual" | "pairs">("individual");
 
+  const [reverseOrder, setReverseOrder] = useState(false);
+
   const individual = getIndividualStats(players, games);
 
   const pairs = getPairStats(players, games);
+
+  const orderedPairs = (reverseOrder ? [...pairs].reverse() : pairs).map(
+    (pair) => ({
+      pair,
+      rankingIndex: pairs.findIndex(
+        (originalPair) => originalPair.pairKey === pair.pairKey,
+      ),
+    }),
+  );
 
   const worstEstablished = [...pairs]
     .filter((pair) => pair.sampleSize === "established")
@@ -105,11 +116,37 @@ export function RankingsPage({ players, games }: RankingsPageProps) {
           Duplas
         </button>
       </div>
+      <div className="ranking-order-toolbar">
+        <button
+          type="button"
+          className={
+            reverseOrder
+              ? "ranking-order-button reversed"
+              : "ranking-order-button"
+          }
+          onClick={() => setReverseOrder((current) => !current)}
+          aria-label={
+            reverseOrder
+              ? "Ordenar do melhor para o pior"
+              : "Ordenar do pior para o melhor"
+          }
+          title={
+            reverseOrder ? "Mostrar melhor → pior" : "Mostrar pior → melhor"
+          }
+        >
+          <span>{reverseOrder ? "Pior → melhor" : "Melhor → pior"}</span>
 
+          <ArrowDown size={18} strokeWidth={2.5} />
+        </button>
+      </div>
       {tab === "individual" ? (
         <div role="tabpanel">
           <div className="panel full-ranking-panel">
-            <RankingTable rows={individual} showStreaks />
+            <RankingTable
+              rows={individual}
+              showStreaks
+              reverse={reverseOrder}
+            />
           </div>
 
           <section className="streak-records" aria-label="Recordes individuais">
@@ -172,8 +209,8 @@ export function RankingsPage({ players, games }: RankingsPageProps) {
               <span>Maior sequência de derrotas</span>
             </div>
 
-            {pairs.map((pair, index) => {
-              const mood = getMoodForPosition(index, pairs.length);
+            {orderedPairs.map(({ pair, rankingIndex }) => {
+              const mood = getMoodForPosition(rankingIndex, pairs.length);
 
               return (
                 <div
@@ -182,7 +219,7 @@ export function RankingsPage({ players, games }: RankingsPageProps) {
                   aria-label={`${pair.label}, ${pair.wins} vitórias, ${pair.losses} derrotas, ${pair.winRate}%`}
                   key={pair.pairKey}
                 >
-                  <strong>{String(index + 1).padStart(2, "0")}</strong>
+                  <strong>{String(rankingIndex + 1).padStart(2, "0")}</strong>
 
                   <span className="pair-ranking-name">
                     <span className="mini-pair-avatars">
@@ -276,36 +313,32 @@ export function RankingsPage({ players, games }: RankingsPageProps) {
             </article>
           </section>
 
- {worstEstablished && (
-  <aside className="worst-callout">
-    <span className="sticker sticker-red">
-      Lanterna das duplas
-    </span>
+          {worstEstablished && (
+            <aside className="worst-callout">
+              <span className="sticker sticker-red">Lanterna das duplas</span>
 
-    <div className="worst-callout-avatars">
-      <PlayerAvatar
-        name={worstEstablished.names[0]}
-        photoUrl={worstEstablished.photoUrls[0]}
-        mood="sad"
-      />
+              <div className="worst-callout-avatars">
+                <PlayerAvatar
+                  name={worstEstablished.names[0]}
+                  photoUrl={worstEstablished.photoUrls[0]}
+                  mood="sad"
+                />
 
-      <PlayerAvatar
-        name={worstEstablished.names[1]}
-        photoUrl={worstEstablished.photoUrls[1]}
-        mood="sad"
-      />
-    </div>
+                <PlayerAvatar
+                  name={worstEstablished.names[1]}
+                  photoUrl={worstEstablished.photoUrls[1]}
+                  mood="sad"
+                />
+              </div>
 
-    <strong>
-      {worstEstablished.label}
-    </strong>
+              <strong>{worstEstablished.label}</strong>
 
-    <p>
-      {worstEstablished.losses} derrotas em{" "}
-      {worstEstablished.games} jogos. Ainda dá para virar.
-    </p>
-  </aside>
-)}
+              <p>
+                {worstEstablished.losses} derrotas em {worstEstablished.games}{" "}
+                jogos. Ainda dá para virar.
+              </p>
+            </aside>
+          )}
         </div>
       )}
     </section>

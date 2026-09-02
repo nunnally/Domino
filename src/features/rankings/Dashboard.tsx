@@ -109,70 +109,59 @@ export function Dashboard({
         </section>
       ) : (
         <>
-      <section className="leader-stage leader-fighter-card">
-  <div className="leader-copy">
-    {/* Frase do personagem */}
-    <span
-      className="sticker sticker-yellow leader-bubble-enter"
-      aria-label={leader.catchphrase ? undefined : "Líder"}
-    >
-      <Trophy size={16} />
-      {leader.catchphrase}
-    </span>
+          <section className="leader-stage leader-fighter-card">
+            <div className="leader-copy">
+              <span
+                className="sticker sticker-yellow leader-bubble-enter"
+                aria-label={leader.catchphrase ? undefined : "Líder"}
+              >
+                <Trophy size={16} />
+                {leader.catchphrase}
+              </span>
 
-    {/* Avatar + efeito de impacto + coroa */}
-    <div className="leader-avatar-wrap leader-avatar-enter">
-      <span className="leader-impact" aria-hidden="true" />
+              <div className="leader-avatar-wrap leader-avatar-enter">
+                <span className="leader-impact" aria-hidden="true" />
 
-      <PlayerAvatar
-        name={leader.name}
-        photoUrl={leader.photoUrl}
-        className="hero-avatar"
-        mood="champion"
-      />
+                <PlayerAvatar
+                  name={leader.name}
+                  photoUrl={leader.photoUrl}
+                  className="hero-avatar"
+                  mood="champion"
+                />
 
-      <span className="leader-crown-enter" aria-hidden="true">
-        <Crown
-          className="leader-crown-floating"
-          strokeWidth={2.5}
-        />
-      </span>
-    </div>
+                <span className="leader-crown-enter" aria-hidden="true">
+                  <Crown className="leader-crown-floating" strokeWidth={2.5} />
+                </span>
+              </div>
 
-    {/* Informações do líder */}
-    <div className="leader-details">
-      <p className="leader-kicker leader-title-enter">
-        Líder individual
-      </p>
+              <div className="leader-details">
+                <p className="leader-kicker leader-title-enter">
+                  Líder individual
+                </p>
 
-      <h2 className="leader-info-enter leader-name-enter">
-        {leader.name}
-      </h2>
+                <h2 className="leader-info-enter leader-name-enter">
+                  {leader.name}
+                </h2>
 
-      <p className="leader-record leader-info-enter leader-record-enter">
-        <strong>{leader.wins} vitórias</strong> · {leader.losses}{" "}
-        {leader.losses === 1 ? "derrota" : "derrotas"}
-      </p>
-    </div>
-  </div>
+                <p className="leader-record leader-info-enter leader-record-enter">
+                  <strong>{leader.wins} vitórias</strong> · {leader.losses}{" "}
+                  {leader.losses === 1 ? "derrota" : "derrotas"}
+                </p>
+              </div>
+            </div>
 
-  {/* Score */}
-  <div className="leader-score">
-    <span className="leader-info-enter leader-score-enter">
-      {leader.winRate}%
-    </span>
+            <div className="leader-score">
+              <span className="leader-info-enter leader-score-enter">
+                {leader.winRate}%
+              </span>
 
-    <small className="leader-info-enter leader-score-label-enter">
-      de aproveitamento
-    </small>
-  </div>
+              <small className="leader-info-enter leader-score-label-enter">
+                de aproveitamento
+              </small>
+            </div>
 
-  <DominoTile
-    left={4}
-    right={1}
-    className="corner-domino"
-  />
-</section>
+            <DominoTile left={4} right={1} className="corner-domino" />
+          </section>
 
           <section className="score-strip" aria-label="Resumo do período">
             <div>

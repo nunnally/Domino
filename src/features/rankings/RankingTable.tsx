@@ -6,6 +6,7 @@ interface RankingTableProps {
   rows: IndividualStat[]
   limit?: number
   showStreaks?: boolean
+  reverse?: boolean
 }
 
 function getMoodForPosition(
@@ -30,8 +31,20 @@ function getMoodForPosition(
 export function RankingTable({
   rows,
   limit,
+  reverse = false,
 }: RankingTableProps) {
-  const visibleRows = limit ? rows.slice(0, limit) : rows
+  const rankedRows = rows.map((row, rankingIndex) => ({
+    row,
+    rankingIndex,
+  }))
+
+  const limitedRows = limit
+    ? rankedRows.slice(0, limit)
+    : rankedRows
+
+  const visibleRows = reverse
+    ? [...limitedRows].reverse()
+    : limitedRows
 
   return (
     <div
@@ -48,22 +61,25 @@ export function RankingTable({
         <span>Aproveit.</span>
       </div>
 
-      {visibleRows.map((row, index) => {
-        const mood = getMoodForPosition(index, rows.length)
+{visibleRows.map(({ row, rankingIndex }) => {
+  const mood = getMoodForPosition(
+    rankingIndex,
+    rows.length,
+  )
 
-        return (
+  return (
           <div
             className={
-              index === 0
-                ? 'ranking-row leader'
-                : 'ranking-row'
+          rankingIndex === 0
+  ? 'ranking-row leader'
+  : 'ranking-row'
             }
             role="row"
             aria-label={`${row.name}, ${row.wins} vitórias, ${row.losses} derrotas, ${row.winRate}%`}
             key={row.playerId}
           >
             <strong className="rank-number">
-              {String(index + 1).padStart(2, '0')}
+            {String(rankingIndex + 1).padStart(2, '0')}  
             </strong>
 
             <span className="rank-player">
