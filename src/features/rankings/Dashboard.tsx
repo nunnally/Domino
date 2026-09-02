@@ -47,8 +47,8 @@ export function Dashboard({ players, games, period, onPeriodChange, onShowRankin
       <section className="dashboard-intro">
         <div>
           <p className="eyebrow">O placar oficial da mesa</p>
-          <h1>Quem manda<br />no <mark>dominó?</mark></h1>
-          <p className="intro-copy">Vitórias, derrotas, duplas improváveis e aquela freguesia que ninguém esquece.</p>
+          <h1>Quem é pai de quem<br />no <mark>dominó?</mark></h1>
+          <p className="intro-copy">Vitórias, derrotas, duplas.</p>
         </div>
         <div className="period-switch" aria-label="Período do ranking">
           {(Object.keys(periodLabels) as PeriodFilter[]).map((value) => (
@@ -61,7 +61,7 @@ export function Dashboard({ players, games, period, onPeriodChange, onShowRankin
 
       <section className="leader-stage">
         <div className="leader-copy">
-          <span className="sticker sticker-yellow"><Trophy size={16} /> Mão quente</span>
+          <span className="sticker sticker-yellow"><Trophy size={16} /> LALALA</span>
           <PlayerAvatar name={leader.name} photoUrl={leader.photoUrl} className="hero-avatar" />
           <div>
             <p className="leader-kicker">Líder individual</p>
@@ -86,7 +86,7 @@ export function Dashboard({ players, games, period, onPeriodChange, onShowRankin
       <div className="dashboard-grid">
         <section className="panel ranking-panel">
           <div className="section-heading">
-            <div><p className="eyebrow">Classificação geral</p><h2>Ranking da mesa</h2></div>
+            <div><p className="eyebrow">Classificação geral</p><h2>Ranking dos véi</h2></div>
             <button className="text-button" type="button" onClick={onShowRankings}>Ver completo <ArrowRight size={18} /></button>
           </div>
           <RankingTable rows={individuals} limit={6} />
@@ -94,7 +94,7 @@ export function Dashboard({ players, games, period, onPeriodChange, onShowRankin
 
         <aside className="side-stack">
           <section className="panel pair-card">
-            <span className="sticker sticker-violet"><Medal size={16} /> Dupla líder</span>
+            <span className="sticker sticker-violet"><Medal size={16} /> Líderes do dominó</span>
             <div className="pair-avatars">
               {bestPair.names.map((name, index) => <PlayerAvatar key={name} name={name} photoUrl={bestPair.photoUrls[index]} />)}
             </div>
@@ -104,11 +104,11 @@ export function Dashboard({ players, games, period, onPeriodChange, onShowRankin
           </section>
 
           <section className="panel lantern-card">
-            <span className="sticker sticker-red"><Flame size={16} /> Lanterna</span>
+            <span className="sticker sticker-red"><Flame size={16} /> Cansaaado</span>
             <p>Hoje o peso da derrota ficou com</p>
             <h3>{lantern.name}</h3>
             <strong>{lantern.losses} derrotas</strong>
-            <small>O próximo jogo sempre pode virar.</small>
+            <small>Durezas....</small>
           </section>
         </aside>
       </div>
