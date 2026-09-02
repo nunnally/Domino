@@ -26,15 +26,15 @@ describe('RankingsPage', () => {
     render(<RankingsPage players={seedPlayers} games={seedGames} />)
 
     const individualRecords = screen.getByRole('region', { name: 'Recordes individuais' })
-    expect(within(individualRecords).getByText('Sequência de vitórias')).toBeInTheDocument()
-    expect(within(individualRecords).getByText('Sequência de derrotas')).toBeInTheDocument()
+    expect(within(individualRecords).getByText('Maior sequência de vitórias')).toBeInTheDocument()
+    expect(within(individualRecords).getByText('Maior sequência de derrotas')).toBeInTheDocument()
     expect(within(individualRecords).getByText('César · Vinícius')).toBeInTheDocument()
     expect(within(individualRecords).getByText('Emanoel')).toBeInTheDocument()
 
     await user.click(screen.getByRole('tab', { name: /duplas/i }))
     const pairRecords = screen.getByRole('region', { name: 'Recordes de duplas' })
-    expect(within(pairRecords).getByText('Sequência de vitórias')).toBeInTheDocument()
-    expect(within(pairRecords).getByText('Sequência de derrotas')).toBeInTheDocument()
+    expect(within(pairRecords).getByText('Maior sequência de vitórias')).toBeInTheDocument()
+    expect(within(pairRecords).getByText('Maior sequência de derrotas')).toBeInTheDocument()
   })
 
   it('não inventa recordistas quando ainda não há partidas', async () => {

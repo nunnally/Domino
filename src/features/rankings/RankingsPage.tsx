@@ -44,23 +44,19 @@ export function RankingsPage({ players, games }: RankingsPageProps) {
 
       {tab === 'individual' ? (
         <div role="tabpanel">
-          <section className="streak-records" aria-label="Recordes individuais">
-            <article className="streak-record win-record"><Flame size={25} /><span><small>Sequência de vitórias</small><strong>{recordNames(individual.filter((row) => row.maxWinStreak === individualWinRecord), individualWinRecord)}</strong></span><b>{individualWinRecord || '—'}</b></article>
-            <article className="streak-record loss-record"><Trash2 size={25} /><span><small>Sequência de derrotas</small><strong>{recordNames(individual.filter((row) => row.maxLossStreak === individualLossRecord), individualLossRecord)}</strong></span><b>{individualLossRecord || '—'}</b></article>
-          </section>
           <div className="panel full-ranking-panel">
             <RankingTable rows={individual} showStreaks />
           </div>
+          <section className="streak-records" aria-label="Recordes individuais">
+            <article className="streak-record win-record"><Flame size={25} /><span><small>Maior sequência de vitórias</small><strong>{recordNames(individual.filter((row) => row.maxWinStreak === individualWinRecord), individualWinRecord)}</strong></span><b>{individualWinRecord || '—'}</b></article>
+            <article className="streak-record loss-record"><Trash2 size={25} /><span><small>Maior sequência de derrotas</small><strong>{recordNames(individual.filter((row) => row.maxLossStreak === individualLossRecord), individualLossRecord)}</strong></span><b>{individualLossRecord || '—'}</b></article>
+          </section>
         </div>
       ) : (
         <div role="tabpanel">
-          <section className="streak-records" aria-label="Recordes de duplas">
-            <article className="streak-record win-record"><Flame size={25} /><span><small>Sequência de vitórias</small><strong>{recordNames(pairs.filter((row) => row.maxWinStreak === pairWinRecord), pairWinRecord)}</strong></span><b>{pairWinRecord || '—'}</b></article>
-            <article className="streak-record loss-record"><Trash2 size={25} /><span><small>Sequência de derrotas</small><strong>{recordNames(pairs.filter((row) => row.maxLossStreak === pairLossRecord), pairLossRecord)}</strong></span><b>{pairLossRecord || '—'}</b></article>
-          </section>
           <div className="panel pair-ranking-table" role="table" aria-label="Ranking de duplas">
             <div className="pair-ranking-head with-streaks" role="row">
-              <span>#</span><span>Dupla</span><span>Jogos</span><span>V</span><span>D</span><span>Aproveit.</span><span>Sequência de vitórias</span><span>Sequência de derrotas</span>
+              <span>#</span><span>Dupla</span><span>Jogos</span><span>V</span><span>D</span><span>Aproveit.</span><span>Maior sequência de vitórias</span><span>Maior sequência de derrotas</span>
             </div>
             {pairs.map((pair, index) => (
               <div className="pair-ranking-row with-streaks" role="row" aria-label={`${pair.label}, ${pair.wins} vitórias, ${pair.losses} derrotas, ${pair.winRate}%`} key={pair.pairKey}>
@@ -70,13 +66,17 @@ export function RankingsPage({ players, games }: RankingsPageProps) {
                     <PlayerAvatar name={pair.names[0]} photoUrl={pair.photoUrls[0]} />
                     <PlayerAvatar name={pair.names[1]} photoUrl={pair.photoUrls[1]} />
                   </span>
-                  <span><strong>{pair.label}</strong>{pair.sampleSize === 'small' && <small>Amostra pequena</small>}<span className="mobile-streaks"><small><Flame size={13} /> Sequência de vitórias: {pair.maxWinStreak}</small><small><Trash2 size={13} /> Sequência de derrotas: {pair.maxLossStreak}</small></span></span>
+                  <span><strong>{pair.label}</strong>{pair.sampleSize === 'small' && <small>Amostra pequena</small>}<span className="mobile-streaks"><small><Flame size={13} /> Maior sequência de vitórias: {pair.maxWinStreak}</small><small><Trash2 size={13} /> Maior sequência de derrotas: {pair.maxLossStreak}</small></span></span>
                 </span>
                 <span>{pair.games}</span><span className="win">{pair.wins}</span><span className="loss">{pair.losses}</span><strong className="rank-rate">{pair.winRate}%</strong>
                 <span className="streak-cell desktop-streak win"><Flame size={17} /> {pair.maxWinStreak}</span><span className="streak-cell desktop-streak loss"><Trash2 size={17} /> {pair.maxLossStreak}</span>
               </div>
             ))}
           </div>
+          <section className="streak-records" aria-label="Recordes de duplas">
+            <article className="streak-record win-record"><Flame size={25} /><span><small>Maior sequência de vitórias</small><strong>{recordNames(pairs.filter((row) => row.maxWinStreak === pairWinRecord), pairWinRecord)}</strong></span><b>{pairWinRecord || '—'}</b></article>
+            <article className="streak-record loss-record"><Trash2 size={25} /><span><small>Maior sequência de derrotas</small><strong>{recordNames(pairs.filter((row) => row.maxLossStreak === pairLossRecord), pairLossRecord)}</strong></span><b>{pairLossRecord || '—'}</b></article>
+          </section>
           {worstEstablished && (
             <aside className="worst-callout">
               <span className="sticker sticker-red">Lanterna das duplas</span>
