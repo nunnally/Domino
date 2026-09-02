@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-02T00:00:00-03:00",
+  "title": "Design System: Dominó Zaaaap",
+  "extensions": {
+    "colorMeta": {
+      "canvas": { "role": "neutral", "displayName": "Papel Claro", "canonical": "#FFFDF5", "tonalRamp": ["#282722", "#47463E", "#67655B", "#89877A", "#ABA99B", "#CDCBBE", "#EEECE1", "#FFFDF5"] },
+      "hot-red": { "role": "primary", "displayName": "Vermelho da Rodada", "canonical": "#FF6B6B", "tonalRamp": ["#401B1B", "#642A2A", "#893939", "#AF4949", "#D65959", "#FF6B6B", "#FFAAAA", "#FFE1E1"] },
+      "vivid-yellow": { "role": "secondary", "displayName": "Amarelo da Mesa", "canonical": "#FFD93D", "tonalRamp": ["#3F360F", "#665619", "#8E7822", "#B79B2C", "#DFBE35", "#FFD93D", "#FFE88B", "#FFF7D8"] },
+      "soft-violet": { "role": "tertiary", "displayName": "Violeta da Dupla", "canonical": "#C4B5FD", "tonalRamp": ["#312D3F", "#4F4966", "#6E658E", "#8E83B7", "#AEA1E0", "#C4B5FD", "#DCD4FE", "#F4F1FF"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Marca e um destaque por tela." },
+      "body": { "displayName": "Body", "purpose": "Leitura de dados, formulários e instruções." }
+    },
+    "shadows": [
+      { "name": "click", "value": "4px 4px 0 #000000", "purpose": "Botões e campos focados." },
+      { "name": "card", "value": "8px 8px 0 #000000", "purpose": "Painéis de primeira hierarquia." }
+    ],
+    "motion": [
+      { "name": "snap", "value": "150ms cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Pressão, foco e hover mecânico." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ação principal tátil e confiante.",
+      "html": "<button class=\"ds-btn-primary\">NOVA PARTIDA</button>",
+      "css": ".ds-btn-primary{background:#FF6B6B;color:#000;padding:14px 20px;border:3px solid #000;border-radius:0;box-shadow:4px 4px 0 #000;font:700 14px 'Space Grotesk',sans-serif;transition:transform 150ms,box-shadow 150ms}.ds-btn-primary:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #000}.ds-btn-primary:active{transform:translate(4px,4px);box-shadow:none}.ds-btn-primary:focus-visible{outline:3px solid #000;outline-offset:4px}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo grande para uso rápido no celular.",
+      "html": "<input class=\"ds-input\" value=\"César\" aria-label=\"Jogador\">",
+      "css": ".ds-input{background:#FFF;color:#000;padding:14px 16px;border:3px solid #000;border-radius:0;font:500 16px 'Space Grotesk',sans-serif}.ds-input:focus{background:#FFD93D;box-shadow:4px 4px 0 #000;outline:none}.ds-input:focus-visible{outline:3px solid #000;outline-offset:4px}"
+    },
+    {
+      "name": "Ranking Card",
+      "kind": "card",
+      "description": "Painel alinhado com energia de cartaz impresso.",
+      "html": "<section class=\"ds-rank\"><strong>1 · CÉSAR</strong><span>4V · 1D</span></section>",
+      "css": ".ds-rank{display:flex;justify-content:space-between;gap:16px;background:#FFF;color:#000;padding:16px;border:3px solid #000;border-radius:0;box-shadow:8px 8px 0 #000;font:500 16px 'Space Grotesk',sans-serif}.ds-rank strong{font-weight:900}"
+    }
+  ],
+  "narrative": {
+    "northStar": "O cartaz da mesa de bar",
+    "overview": "Um placar físico montado com cartazes, etiquetas e peças de dominó. Contornos pretos grossos, sombras sólidas, blocos de cor e pequenos desalinhamentos tornam cada ação tátil sem sacrificar a leitura.",
+    "keyCharacteristics": ["Tema claro único", "Sombras duras sem desfoque", "Cor em blocos funcionais", "Interações mecânicas", "Dominós nos cantos"],
+    "rules": [
+      { "name": "Hard Ink", "body": "Toda estrutura importante usa preto puro.", "section": "colors" },
+      { "name": "No Fog", "body": "Sombras suaves, glow, blur e glassmorphism são proibidos.", "section": "elevation" }
+    ],
+    "dos": ["Do manter estatísticas alinhadas.", "Do usar peças de dominó em alguns cantos."],
+    "donts": ["Don't produzir dashboard corporativo genérico de SaaS.", "Don't usar dark mode neon, glassmorphism e gradientes suaves."]
+  }
+}
+
