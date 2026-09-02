@@ -307,6 +307,73 @@ input:focus-visible {
   object-fit: cover;
 }
 
+.lantern-card-single {
+  display: grid;
+  justify-items: start;
+  align-content: start;
+  gap: 0;
+}
+.lantern-card-single > .sticker {
+  margin-bottom: 4px;
+}
+
+
+.lantern-period {
+  margin: 0;
+}
+.lantern-phrase-sticker {
+  margin-top: 10px;
+  margin-bottom: 16px;
+
+  max-width: 220px;
+
+  text-transform: none;
+
+  transform: rotate(-3deg);
+}
+
+.lantern-single-avatar {
+  position: relative;
+  z-index: 1;
+
+  width: 78px;
+  height: 78px;
+
+  border-width: 4px;
+
+  background: var(--surface);
+
+  box-shadow: 6px 6px 0 var(--ink);
+
+  transform: rotate(2deg);
+}
+
+.lantern-card-single h3 {
+  margin: 8px 0 6px;
+
+  width: 100%;
+
+  text-align: center;
+}
+
+.lantern-card-single > p,
+.lantern-card-single > strong,
+.lantern-card-single > small {
+  width: 100%;
+}
+
+.lantern-card-single > p {
+  margin-top: 10px;
+}
+
+.lantern-card-single > strong {
+  text-align: center;
+}
+
+.lantern-card-single > small:last-child {
+  margin-top: 16px;
+}
+
 .leader-fighter-card {
   isolation: isolate;
 }
@@ -632,11 +699,22 @@ input:focus-visible {
     width: 35px;
     height: 35px;
   }
+
+  .lantern-phrase-sticker {
+  max-width: 180px;
+  font-size: 11px;
 }
 
-/* ==========================================================
-   ACCESSIBILITY
-   ========================================================== */
+.lantern-single-impact {
+  width: 96px;
+  height: 96px;
+}
+
+.lantern-single-avatar {
+  width: 68px;
+  height: 68px;
+}
+}
 
 @media (prefers-reduced-motion: reduce) {
   .leader-title-enter,

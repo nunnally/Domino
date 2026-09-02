@@ -225,7 +225,10 @@ export function Dashboard({
                 />
               </section>
 
-              <LanternCard players={lanternPlayers} />
+             <LanternCard
+  players={lanternPlayers}
+  period={period}
+/>
             </aside>
           </div>
 
