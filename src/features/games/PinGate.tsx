@@ -15,7 +15,7 @@ export function PinGate({ expectedPin, onUnlock }: PinGateProps) {
   const submit = (event: FormEvent) => {
     event.preventDefault()
     if (pin !== expectedPin) {
-      setError('PIN errado. Pergunte para alguém da mesa.')
+      setError('PIN errado. Pergunte para alguém da diretoria.')
       return
     }
     setError('')
@@ -25,11 +25,10 @@ export function PinGate({ expectedPin, onUnlock }: PinGateProps) {
   return (
     <section className="page-wrap pin-page">
       <div className="pin-card">
-        <span className="sticker sticker-yellow"><KeyRound size={16} /> Trava informal</span>
-        <h1>Quem tem o<br />PIN da mesa?</h1>
-        <p>É só uma barreira casual para evitar cadastro sem querer. Não é segurança de verdade.</p>
+        <span className="sticker sticker-yellow"><KeyRound size={16} /> Ta bloqueado, pae</span>
+        <h1>Quem tem o<br />PIN ?</h1>
         <form onSubmit={submit}>
-          <label htmlFor="shared-pin">PIN da mesa</label>
+          <label htmlFor="shared-pin">PIN</label>
           <input id="shared-pin" type="password" inputMode="numeric" autoComplete="current-password" value={pin} onChange={(event) => setPin(event.target.value)} />
           {error && <p className="form-error" role="alert">{error}</p>}
           <button className="button button-primary" type="submit">Liberar cadastro</button>
