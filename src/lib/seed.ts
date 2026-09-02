@@ -3,7 +3,7 @@ import type { Game, Player } from './types'
 const createdAt = '2026-09-02T08:00:00-03:00'
 
 export const seedPlayers: Player[] = [
-  { id: 'cesar', name: 'César', photoUrl: 'https://api.dicebear.com/9.x/thumbs/svg?seed=Cesar', active: true, createdAt },
+  { id: 'cesar', name: 'César', photoUrl: 'https://api.dicebear.com/9.x/thumbs/svg?seed=Cesar', catchphrase: 'O bem prevalece.', active: true, createdAt },
   { id: 'vinicius', name: 'Vinícius', photoUrl: 'https://api.dicebear.com/9.x/thumbs/svg?seed=Vinicius', active: true, createdAt },
   { id: 'machilas', name: 'Machilas', photoUrl: 'https://api.dicebear.com/9.x/thumbs/svg?seed=Machilas', active: true, createdAt },
   { id: 'gustavo', name: 'Gustavo', photoUrl: 'https://api.dicebear.com/9.x/thumbs/svg?seed=Gustavo', active: true, createdAt },
@@ -33,4 +33,3 @@ export const seedGames: Game[] = [
   seedGame('seed-6', '11:30', ['machilas', 'gustavo'], ['cesar', 'vinicius']),
   seedGame('seed-7', '12:00', ['machilas', 'gustavo'], ['emanoel', 'vinicius']),
 ]
-

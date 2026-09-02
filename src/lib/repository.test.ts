@@ -38,11 +38,12 @@ describe('local repository', () => {
       active: true,
       createdAt: '2026-09-02T14:00:00-03:00',
     })
-    await repository.updatePlayer('novo', { active: false })
+    await repository.updatePlayer('novo', { active: false, catchphrase: 'Cheguei na mesa.' })
 
     expect((await repository.listPlayers()).find(({ id }) => id === 'novo')).toMatchObject({
       name: 'Novo jogador',
       active: false,
+      catchphrase: 'Cheguei na mesa.',
     })
   })
 })

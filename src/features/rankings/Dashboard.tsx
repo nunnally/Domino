@@ -61,9 +61,9 @@ export function Dashboard({ players, games, period, onPeriodChange, onShowRankin
 
       <section className="leader-stage">
         <div className="leader-copy">
-          <span className="sticker sticker-yellow"><Trophy size={16} /> LALALA</span>
+          <span className={leader.catchphrase ? 'sticker sticker-yellow' : 'sticker sticker-yellow leader-icon-sticker'} aria-label={leader.catchphrase ? undefined : 'Líder'}><Trophy size={16} /> {leader.catchphrase}</span>
           <PlayerAvatar name={leader.name} photoUrl={leader.photoUrl} className="hero-avatar" />
-          <div>
+          <div className="leader-details">
             <p className="leader-kicker">Líder individual</p>
             <h2>{leader.name}</h2>
             <p className="leader-record"><strong>{leader.wins} vitórias</strong> · {leader.losses} {leader.losses === 1 ? 'derrota' : 'derrotas'}</p>
@@ -126,4 +126,3 @@ export function Dashboard({ players, games, period, onPeriodChange, onShowRankin
     </div>
   )
 }
-

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -10,7 +10,7 @@ describe('GameForm', () => {
   it('envia uma partida com quatro jogadores distintos', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
-    render(<GameForm players={seedPlayers} onSave={onSave} onCancel={() => {}} />)
+    render(<GameForm players={seedPlayers} onSave={onSave} onCancel={() => {}} locate={async () => ({ latitude: -23.5505, longitude: -46.6333 })} />)
 
     await user.selectOptions(screen.getByLabelText('Vencedor 1'), 'cesar')
     await user.selectOptions(screen.getByLabelText('Vencedor 2'), 'vinicius')
@@ -18,10 +18,30 @@ describe('GameForm', () => {
     await user.selectOptions(screen.getByLabelText('Perdedor 2'), 'emanoel')
     await user.click(screen.getByRole('button', { name: /salvar partida/i }))
 
-    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({
-      winnerIds: ['cesar', 'vinicius'],
-      loserIds: ['david', 'emanoel'],
-    }))
+    await waitFor(() => {
+      expect(onSave).toHaveBeenCalledWith(expect.objectContaining({
+        winnerIds: ['cesar', 'vinicius'],
+        loserIds: ['david', 'emanoel'],
+        latitude: -23.5505,
+        longitude: -46.6333,
+      }))
+    })
+  })
+
+  it('salva normalmente quando a localização não está disponível', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<GameForm players={seedPlayers} onSave={onSave} onCancel={() => {}} locate={async () => undefined} />)
+
+    await user.selectOptions(screen.getByLabelText('Vencedor 1'), 'cesar')
+    await user.selectOptions(screen.getByLabelText('Vencedor 2'), 'vinicius')
+    await user.selectOptions(screen.getByLabelText('Perdedor 1'), 'david')
+    await user.selectOptions(screen.getByLabelText('Perdedor 2'), 'emanoel')
+    await user.click(screen.getByRole('button', { name: /salvar partida/i }))
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce())
+    expect(onSave.mock.calls[0][0]).not.toHaveProperty('latitude')
+    expect(onSave.mock.calls[0][0]).not.toHaveProperty('longitude')
   })
 
   it('mostra o erro quando um jogador aparece nas duas duplas', async () => {
@@ -56,9 +76,9 @@ describe('PinGate', () => {
   it('libera a edição com o PIN compartilhado', async () => {
     const user = userEvent.setup()
     const onUnlock = vi.fn()
-    render(<PinGate expectedPin="1234" onUnlock={onUnlock} />)
+    const { container } = render(<PinGate expectedPin="1234" onUnlock={onUnlock} />)
 
-    await user.type(screen.getByLabelText('PIN da mesa'), '1234')
+    await user.type(container.querySelector('input[type="password"]')!, '1234')
     await user.click(screen.getByRole('button', { name: /liberar cadastro/i }))
 
     expect(onUnlock).toHaveBeenCalledOnce()

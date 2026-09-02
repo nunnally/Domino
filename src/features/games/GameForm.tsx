@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react'
-import { ArrowLeft, Save } from 'lucide-react'
+import { ArrowLeft, MapPin, Save } from 'lucide-react'
 
 import { DominoTile } from '../../components/DominoTile'
 import type { Player } from '../../lib/types'
@@ -9,7 +9,21 @@ interface GameFormProps {
   players: Player[]
   onSave: (draft: GameDraft) => void | Promise<void>
   onCancel: () => void
+  locate?: () => Promise<{ latitude: number; longitude: number } | undefined>
 }
+
+const locateCurrentGame = () => new Promise<{ latitude: number; longitude: number } | undefined>((resolve) => {
+  if (!navigator.geolocation) {
+    resolve(undefined)
+    return
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    ({ coords }) => resolve({ latitude: coords.latitude, longitude: coords.longitude }),
+    () => resolve(undefined),
+    { enableHighAccuracy: false, timeout: 5_000, maximumAge: 60_000 },
+  )
+})
 
 const localDateTime = () => {
   const now = new Date()
@@ -19,7 +33,7 @@ const localDateTime = () => {
 
 type Slot = 'winner1' | 'winner2' | 'loser1' | 'loser2'
 
-export function GameForm({ players, onSave, onCancel }: GameFormProps) {
+export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame }: GameFormProps) {
   const activePlayers = useMemo(() => players.filter(({ active }) => active), [players])
   const [slots, setSlots] = useState<Record<Slot, string>>({ winner1: '', winner2: '', loser1: '', loser2: '' })
   const [playedAt, setPlayedAt] = useState(localDateTime)
@@ -47,7 +61,8 @@ export function GameForm({ players, onSave, onCancel }: GameFormProps) {
     setSaving(true)
     setSaveError('')
     try {
-      await onSave(draft)
+      const location = await locate()
+      await onSave({ ...draft, ...location })
     } catch {
       setSaveError('Não foi possível salvar. A partida continua preenchida para você tentar de novo.')
     } finally {
@@ -105,6 +120,8 @@ export function GameForm({ players, onSave, onCancel }: GameFormProps) {
             <label><span>Perdedor</span><input type="number" min="0" inputMode="numeric" value={loserScore} onChange={(event) => setLoserScore(event.target.value)} /></label>
           </fieldset>
         </section>
+
+        <p className="location-note"><MapPin size={17} /> Ao salvar, tentaremos incluir o local da partida.</p>
 
         {(errors.date || errors.score || saveError) && <p className="form-error full-error" role="alert">{errors.date ?? errors.score ?? saveError}</p>}
 

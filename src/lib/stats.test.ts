@@ -10,39 +10,50 @@ import {
 
 describe('estatísticas das sete partidas iniciais', () => {
   it('calcula vitórias, derrotas e aproveitamento individual', () => {
-    const stats = getIndividualStats(seedPlayers, seedGames)
+    const stats = getIndividualStats(seedPlayers, [...seedGames].reverse())
 
-    expect(stats.map(({ name, games, wins, losses, winRate }) => ({
+    expect(stats.map(({ name, games, wins, losses, winRate, maxWinStreak, maxLossStreak }) => ({
       name,
       games,
       wins,
       losses,
       winRate,
+      maxWinStreak,
+      maxLossStreak,
     }))).toEqual([
-      { name: 'César', games: 5, wins: 4, losses: 1, winRate: 80 },
-      { name: 'Vinícius', games: 6, wins: 4, losses: 2, winRate: 66.7 },
-      { name: 'Gustavo', games: 5, wins: 3, losses: 2, winRate: 60 },
-      { name: 'Machilas', games: 5, wins: 3, losses: 2, winRate: 60 },
-      { name: 'David', games: 3, wins: 0, losses: 3, winRate: 0 },
-      { name: 'Emanoel', games: 4, wins: 0, losses: 4, winRate: 0 },
+      { name: 'César', games: 5, wins: 4, losses: 1, winRate: 80, maxWinStreak: 4, maxLossStreak: 1 },
+      { name: 'Vinícius', games: 6, wins: 4, losses: 2, winRate: 66.7, maxWinStreak: 4, maxLossStreak: 2 },
+      { name: 'Gustavo', games: 5, wins: 3, losses: 2, winRate: 60, maxWinStreak: 2, maxLossStreak: 2 },
+      { name: 'Machilas', games: 5, wins: 3, losses: 2, winRate: 60, maxWinStreak: 2, maxLossStreak: 2 },
+      { name: 'David', games: 3, wins: 0, losses: 3, winRate: 0, maxWinStreak: 0, maxLossStreak: 3 },
+      { name: 'Emanoel', games: 4, wins: 0, losses: 4, winRate: 0, maxWinStreak: 0, maxLossStreak: 4 },
     ])
+  })
+
+  it('leva a frase opcional do jogador para o ranking', () => {
+    expect(getIndividualStats(seedPlayers, seedGames)[0]).toMatchObject({
+      name: 'César',
+      catchphrase: 'O bem prevalece.',
+    })
   })
 
   it('trata a ordem dos parceiros como a mesma dupla', () => {
     const stats = getPairStats(seedPlayers, seedGames)
 
-    expect(stats.map(({ label, games, wins, losses, winRate, sampleSize }) => ({
+    expect(stats.map(({ label, games, wins, losses, winRate, sampleSize, maxWinStreak, maxLossStreak }) => ({
       label,
       games,
       wins,
       losses,
       winRate,
       sampleSize,
+      maxWinStreak,
+      maxLossStreak,
     }))).toEqual([
-      { label: 'César & Vinícius', games: 5, wins: 4, losses: 1, winRate: 80, sampleSize: 'established' },
-      { label: 'Gustavo & Machilas', games: 5, wins: 3, losses: 2, winRate: 60, sampleSize: 'established' },
-      { label: 'David & Emanoel', games: 3, wins: 0, losses: 3, winRate: 0, sampleSize: 'established' },
-      { label: 'Emanoel & Vinícius', games: 1, wins: 0, losses: 1, winRate: 0, sampleSize: 'small' },
+      { label: 'César & Vinícius', games: 5, wins: 4, losses: 1, winRate: 80, sampleSize: 'established', maxWinStreak: 4, maxLossStreak: 1 },
+      { label: 'Gustavo & Machilas', games: 5, wins: 3, losses: 2, winRate: 60, sampleSize: 'established', maxWinStreak: 2, maxLossStreak: 2 },
+      { label: 'David & Emanoel', games: 3, wins: 0, losses: 3, winRate: 0, sampleSize: 'established', maxWinStreak: 0, maxLossStreak: 3 },
+      { label: 'Emanoel & Vinícius', games: 1, wins: 0, losses: 1, winRate: 0, sampleSize: 'small', maxWinStreak: 0, maxLossStreak: 1 },
     ])
   })
 

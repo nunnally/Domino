@@ -4,6 +4,8 @@ export interface GameDraft {
   playedAt: string
   winnerScore?: number
   loserScore?: number
+  latitude?: number
+  longitude?: number
 }
 
 export type ValidationErrors = Partial<Record<'players' | 'date' | 'score', string>>
@@ -25,4 +27,3 @@ export function validateGameDraft(draft: GameDraft): ValidationErrors {
 
   return {}
 }
-

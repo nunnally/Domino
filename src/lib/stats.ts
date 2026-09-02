@@ -21,6 +21,19 @@ const compareByRank = <T extends { wins: number; losses: number; winRate: number
   b: T,
 ) => b.wins - a.wins || b.winRate - a.winRate || a.losses - b.losses
 
+type Streak = { result: 'win' | 'loss' | null; count: number }
+
+const updateStreak = (
+  streaks: Map<string, Streak>,
+  key: string,
+  result: 'win' | 'loss',
+) => {
+  const current = streaks.get(key) ?? { result: null, count: 0 }
+  const next = { result, count: current.result === result ? current.count + 1 : 1 }
+  streaks.set(key, next)
+  return next.count
+}
+
 export function getIndividualStats(players: Player[], games: Game[]): IndividualStat[] {
   const stats = new Map<string, IndividualStat>()
 
@@ -29,19 +42,25 @@ export function getIndividualStats(players: Player[], games: Game[]): Individual
       playerId: player.id,
       name: player.name,
       photoUrl: player.photoUrl,
+      catchphrase: player.catchphrase,
       games: 0,
       wins: 0,
       losses: 0,
       winRate: 0,
+      maxWinStreak: 0,
+      maxLossStreak: 0,
     })
   }
 
-  for (const game of games) {
+  const streaks = new Map<string, Streak>()
+  const chronologicalGames = [...games].sort((a, b) => new Date(a.playedAt).getTime() - new Date(b.playedAt).getTime())
+  for (const game of chronologicalGames) {
     for (const id of game.winnerIds) {
       const stat = stats.get(id)
       if (stat) {
         stat.games += 1
         stat.wins += 1
+        stat.maxWinStreak = Math.max(stat.maxWinStreak, updateStreak(streaks, id, 'win'))
       }
     }
     for (const id of game.loserIds) {
@@ -49,6 +68,7 @@ export function getIndividualStats(players: Player[], games: Game[]): Individual
       if (stat) {
         stat.games += 1
         stat.losses += 1
+        stat.maxLossStreak = Math.max(stat.maxLossStreak, updateStreak(streaks, id, 'loss'))
       }
     }
   }
@@ -61,6 +81,7 @@ export function getIndividualStats(players: Player[], games: Game[]): Individual
 export function getPairStats(players: Player[], games: Game[]): PairStat[] {
   const playersById = playerMap(players)
   const stats = new Map<string, PairStat>()
+  const streaks = new Map<string, Streak>()
 
   const addResult = (ids: [string, string], won: boolean) => {
     const canonicalIds = canonicalPair(ids)
@@ -82,16 +103,24 @@ export function getPairStats(players: Player[], games: Game[]): PairStat[] {
       wins: 0,
       losses: 0,
       winRate: 0,
+      maxWinStreak: 0,
+      maxLossStreak: 0,
       sampleSize: 'small' as const,
     }
 
     existing.games += 1
-    if (won) existing.wins += 1
-    else existing.losses += 1
+    if (won) {
+      existing.wins += 1
+      existing.maxWinStreak = Math.max(existing.maxWinStreak, updateStreak(streaks, key, 'win'))
+    } else {
+      existing.losses += 1
+      existing.maxLossStreak = Math.max(existing.maxLossStreak, updateStreak(streaks, key, 'loss'))
+    }
     stats.set(key, existing)
   }
 
-  for (const game of games) {
+  const chronologicalGames = [...games].sort((a, b) => new Date(a.playedAt).getTime() - new Date(b.playedAt).getTime())
+  for (const game of chronologicalGames) {
     addResult(game.winnerIds, true)
     addResult(game.loserIds, false)
   }

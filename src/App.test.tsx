@@ -10,6 +10,7 @@ describe('dashboard', () => {
     render(<App repository={createLocalRepository(createMemoryStorage())} />)
 
     expect(await screen.findByRole('heading', { level: 2, name: /^césar$/i })).toBeInTheDocument()
+    expect(screen.getByText('O bem prevalece.')).toBeInTheDocument()
     expect(screen.getAllByText(/4 vitórias/i).length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: /nova partida/i })).toBeInTheDocument()
   })

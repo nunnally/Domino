@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
@@ -19,5 +19,21 @@ describe('RankingsPage', () => {
     await user.click(screen.getByRole('tab', { name: /duplas/i }))
     expect(screen.getByText('Emanoel & Vinícius')).toBeInTheDocument()
     expect(screen.getByText('Amostra pequena')).toBeInTheDocument()
+  })
+
+  it('mostra os recordes históricos de sequências individuais e de duplas', async () => {
+    const user = userEvent.setup()
+    render(<RankingsPage players={seedPlayers} games={seedGames} />)
+
+    const individualRecords = screen.getByRole('region', { name: 'Recordes individuais' })
+    expect(within(individualRecords).getByText('Sequência de vitórias')).toBeInTheDocument()
+    expect(within(individualRecords).getByText('Sequência de derrotas')).toBeInTheDocument()
+    expect(within(individualRecords).getByText('César · Vinícius')).toBeInTheDocument()
+    expect(within(individualRecords).getByText('Emanoel')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('tab', { name: /duplas/i }))
+    const pairRecords = screen.getByRole('region', { name: 'Recordes de duplas' })
+    expect(within(pairRecords).getByText('Sequência de vitórias')).toBeInTheDocument()
+    expect(within(pairRecords).getByText('Sequência de derrotas')).toBeInTheDocument()
   })
 })

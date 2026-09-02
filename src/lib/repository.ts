@@ -5,7 +5,7 @@ export interface DominoRepository {
   listGames(): Promise<Game[]>
   addGame(game: Game): Promise<Game>
   addPlayer(player: Player): Promise<Player>
-  updatePlayer(id: string, changes: Partial<Pick<Player, 'name' | 'photoUrl' | 'active'>>): Promise<Player>
+  updatePlayer(id: string, changes: Partial<Pick<Player, 'name' | 'photoUrl' | 'catchphrase' | 'active'>>): Promise<Player>
 }
 
 export async function createRepository(): Promise<DominoRepository> {
@@ -20,4 +20,3 @@ export async function createRepository(): Promise<DominoRepository> {
   const { createLocalRepository } = await import('./local-repository')
   return createLocalRepository(window.localStorage)
 }
-

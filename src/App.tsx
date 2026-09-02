@@ -90,22 +90,23 @@ export function App({ repository: suppliedRepository }: AppProps) {
     navigate('home')
   }
 
-  const addPlayer = async (name: string, photoUrl: string) => {
+  const addPlayer = async (name: string, photoUrl: string, catchphrase: string) => {
     if (!repository) throw new Error('Repositório indisponível')
     const avatarSeed = encodeURIComponent(name.normalize('NFD').replace(/[\u0300-\u036f]/g, ''))
     await repository.addPlayer({
       id: crypto.randomUUID(),
       name,
       photoUrl: photoUrl || `https://api.dicebear.com/9.x/thumbs/svg?seed=${avatarSeed}`,
+      ...(catchphrase ? { catchphrase } : {}),
       active: true,
       createdAt: new Date().toISOString(),
     })
     await loadData(repository)
   }
 
-  const togglePlayer = async (player: Player) => {
+  const updatePlayer = async (player: Player, changes: Partial<Pick<Player, 'active' | 'catchphrase'>>) => {
     if (!repository) throw new Error('Repositório indisponível')
-    await repository.updatePlayer(player.id, { active: !player.active })
+    await repository.updatePlayer(player.id, changes)
     await loadData(repository)
   }
 
@@ -141,7 +142,7 @@ export function App({ repository: suppliedRepository }: AppProps) {
       )}
       {!loading && !error && page === 'rankings' && <RankingsPage players={players} games={games} />}
       {!loading && !error && page === 'rivalries' && <HeadToHeadPage players={players} games={games} />}
-      {!loading && !error && page === 'players' && <PlayersPage players={players} editable={unlocked} onAddPlayer={addPlayer} onTogglePlayer={togglePlayer} />}
+      {!loading && !error && page === 'players' && <PlayersPage players={players} editable={unlocked} onAddPlayer={addPlayer} onUpdatePlayer={updatePlayer} />}
       {!loading && !error && page === 'history' && <HistoryPage players={players} games={games} />}
     </AppShell>
   )
