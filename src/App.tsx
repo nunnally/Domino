@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { AppShell, type PageId } from './components/AppShell'
+import { GameForm } from './features/games/GameForm'
+import { PinGate } from './features/games/PinGate'
 import { Dashboard } from './features/rankings/Dashboard'
 import { createRepository, type DominoRepository } from './lib/repository'
 import type { Game, PeriodFilter, Player } from './lib/types'
@@ -26,6 +28,7 @@ export function App({ repository: suppliedRepository }: AppProps) {
   const [period, setPeriod] = useState<PeriodFilter>('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem('domino-zaaaap:unlocked') === 'yes')
 
   const loadData = useCallback(async (activeRepository: DominoRepository) => {
     setLoading(true)
@@ -62,6 +65,23 @@ export function App({ repository: suppliedRepository }: AppProps) {
     window.scrollTo?.({ top: 0, behavior: 'smooth' })
   }
 
+  const unlock = () => {
+    sessionStorage.setItem('domino-zaaaap:unlocked', 'yes')
+    setUnlocked(true)
+  }
+
+  const addGame = async (draft: import('./lib/validation').GameDraft) => {
+    if (!repository) throw new Error('Repositório indisponível')
+    const now = new Date().toISOString()
+    await repository.addGame({
+      ...draft,
+      id: crypto.randomUUID(),
+      createdAt: now,
+    })
+    await loadData(repository)
+    navigate('home')
+  }
+
   return (
     <AppShell activePage={page} onNavigate={navigate}>
       {loading && (
@@ -86,7 +106,13 @@ export function App({ repository: suppliedRepository }: AppProps) {
           onNewGame={() => navigate('new-game')}
         />
       )}
-      {!loading && !error && page !== 'home' && (
+      {!loading && !error && page === 'new-game' && !unlocked && (
+        <PinGate expectedPin={import.meta.env.VITE_SHARED_PIN || '1234'} onUnlock={unlock} />
+      )}
+      {!loading && !error && page === 'new-game' && unlocked && (
+        <GameForm players={players} onSave={addGame} onCancel={() => navigate('home')} />
+      )}
+      {!loading && !error && page !== 'home' && page !== 'new-game' && (
         <section className="page-wrap placeholder-page">
           <p className="eyebrow">Próxima peça</p>
           <h1>{pageTitles[page]}</h1>
@@ -96,4 +122,3 @@ export function App({ repository: suppliedRepository }: AppProps) {
     </AppShell>
   )
 }
-
