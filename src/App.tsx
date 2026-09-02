@@ -4,20 +4,15 @@ import { AppShell, type PageId } from './components/AppShell'
 import { GameForm } from './features/games/GameForm'
 import { PinGate } from './features/games/PinGate'
 import { Dashboard } from './features/rankings/Dashboard'
+import { HeadToHeadPage } from './features/rankings/HeadToHeadPage'
+import { RankingsPage } from './features/rankings/RankingsPage'
+import { HistoryPage } from './features/history/HistoryPage'
+import { PlayersPage } from './features/players/PlayersPage'
 import { createRepository, type DominoRepository } from './lib/repository'
 import type { Game, PeriodFilter, Player } from './lib/types'
 
 interface AppProps {
   repository?: DominoRepository
-}
-
-const pageTitles: Record<PageId, string> = {
-  home: 'Início',
-  rankings: 'Rankings',
-  rivalries: 'Confrontos',
-  players: 'Jogadores',
-  history: 'Histórico',
-  'new-game': 'Nova partida',
 }
 
 export function App({ repository: suppliedRepository }: AppProps) {
@@ -82,6 +77,25 @@ export function App({ repository: suppliedRepository }: AppProps) {
     navigate('home')
   }
 
+  const addPlayer = async (name: string, photoUrl: string) => {
+    if (!repository) throw new Error('Repositório indisponível')
+    const avatarSeed = encodeURIComponent(name.normalize('NFD').replace(/[\u0300-\u036f]/g, ''))
+    await repository.addPlayer({
+      id: crypto.randomUUID(),
+      name,
+      photoUrl: photoUrl || `https://api.dicebear.com/9.x/thumbs/svg?seed=${avatarSeed}`,
+      active: true,
+      createdAt: new Date().toISOString(),
+    })
+    await loadData(repository)
+  }
+
+  const togglePlayer = async (player: Player) => {
+    if (!repository) throw new Error('Repositório indisponível')
+    await repository.updatePlayer(player.id, { active: !player.active })
+    await loadData(repository)
+  }
+
   return (
     <AppShell activePage={page} onNavigate={navigate}>
       {loading && (
@@ -112,13 +126,10 @@ export function App({ repository: suppliedRepository }: AppProps) {
       {!loading && !error && page === 'new-game' && unlocked && (
         <GameForm players={players} onSave={addGame} onCancel={() => navigate('home')} />
       )}
-      {!loading && !error && page !== 'home' && page !== 'new-game' && (
-        <section className="page-wrap placeholder-page">
-          <p className="eyebrow">Próxima peça</p>
-          <h1>{pageTitles[page]}</h1>
-          <p>Esta área está entrando na mesa agora.</p>
-        </section>
-      )}
+      {!loading && !error && page === 'rankings' && <RankingsPage players={players} games={games} />}
+      {!loading && !error && page === 'rivalries' && <HeadToHeadPage players={players} games={games} />}
+      {!loading && !error && page === 'players' && <PlayersPage players={players} editable={unlocked} onAddPlayer={addPlayer} onTogglePlayer={togglePlayer} />}
+      {!loading && !error && page === 'history' && <HistoryPage players={players} games={games} />}
     </AppShell>
   )
 }

@@ -44,7 +44,7 @@ export function AppShell({ activePage, onNavigate, children }: AppShellProps) {
       <main>{children}</main>
 
       <nav className="mobile-nav" aria-label="Navegação no celular">
-        {navItems.slice(0, 4).map(({ id, label, icon: Icon }) => (
+        {navItems.map(({ id, label, icon: Icon }) => (
           <button className={activePage === id ? 'mobile-nav-item active' : 'mobile-nav-item'} type="button" key={id} onClick={() => onNavigate(id)}>
             <Icon size={21} strokeWidth={2.5} />
             <span>{label}</span>
@@ -58,4 +58,3 @@ export function AppShell({ activePage, onNavigate, children }: AppShellProps) {
     </div>
   )
 }
-
