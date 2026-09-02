@@ -149,17 +149,18 @@ export function getHeadToHeadStats(players: Player[], games: Game[]): HeadToHead
         { label: first, wins: matchup.scoreByPair[first] ?? 0 },
         { label: second, wins: matchup.scoreByPair[second] ?? 0 },
       ].sort((a, b) => b.wins - a.wins || a.label.localeCompare(b.label, 'pt-BR'))
+      const rivalryLabel: HeadToHeadStat['rivalryLabel'] = matchup.games === 1
+        ? 'Primeiro confronto'
+        : ordered[0].wins === ordered[1].wins
+          ? 'Duelo aberto'
+          : 'Carrasco da rodada'
 
       return {
         ...matchup,
         leaderLabel: ordered[0].label,
         leaderWins: ordered[0].wins,
         trailerWins: ordered[1].wins,
-        rivalryLabel: matchup.games === 1
-          ? 'Primeiro confronto'
-          : ordered[0].wins === ordered[1].wins
-            ? 'Duelo aberto'
-            : 'Carrasco da rodada',
+        rivalryLabel,
       }
     })
     .sort((a, b) => b.games - a.games || a.matchupKey.localeCompare(b.matchupKey, 'pt-BR'))
