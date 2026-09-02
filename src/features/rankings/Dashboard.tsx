@@ -55,7 +55,6 @@ export function Dashboard({
           <p className="eyebrow">O placar oficial da mesa</p>
           <h1>
             Quem é pai de quem
-            <br />
             no <mark>dominó?</mark>
           </h1>
           <p className="intro-copy">Vitórias, derrotas, duplas.</p>
