@@ -120,7 +120,7 @@ export function Dashboard({
                 className="hero-avatar"
                 mood="champion"
               />
-              <div>
+              <div className="leader-details">
                 <p className="leader-kicker">Líder individual</p>
                 <h2>{leader.name}</h2>
                 <p className="leader-record">
