@@ -362,6 +362,7 @@ button:focus-visible, select:focus-visible, input:focus-visible {
 @media (max-width: 820px) {
   .ranking-head.with-streaks, .pair-ranking-head.with-streaks { display: none; }
   .ranking-row.with-streaks { grid-template-columns: 32px minmax(0, 1fr) 40px 40px 58px; min-height: 104px; padding: 8px 10px; }
+  .ranking-row.with-streaks .rank-stat:nth-of-type(2) { display: none; }
   .pair-ranking-row.with-streaks { grid-template-columns: 30px minmax(0, 1fr) 40px 62px; min-height: 118px; padding: 10px; }
   .desktop-streak { display: none; }
   .mobile-streaks { display: grid; gap: 3px; margin-top: 5px; }
@@ -403,7 +404,7 @@ button:focus-visible, select:focus-visible, input:focus-visible {
   .desktop-streak { display: none; }
   .mobile-streaks { display: grid; gap: 3px; margin-top: 5px; }
   .mobile-streaks small { display: flex; align-items: center; gap: 4px; width: auto; padding: 0; border: 0; background: transparent; font-size: 8px; font-weight: 700; text-transform: none; }
-  .ranking-row .rank-stat:nth-of-type(3) { display: none; }
+  .ranking-row .rank-stat:nth-of-type(2) { display: none; }
   .rank-player { gap: 7px; }
   .rank-player .player-avatar { width: 36px; height: 36px; border-width: 2px; }
   .rank-stat small { display: block; font-size: 8px; }
