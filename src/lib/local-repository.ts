@@ -22,9 +22,23 @@ export function createLocalRepository(storage: StorageLike): DominoRepository {
 
   const write = <T>(key: string, value: T) => storage.setItem(key, JSON.stringify(value))
 
+  const readPlayers = () => {
+    const players = read<Player[]>(PLAYERS_KEY, seedPlayers)
+    let migrated = false
+    const nextPlayers = players.map((player) => {
+      if (player.id === 'cesar' && player.catchphrase === undefined) {
+        migrated = true
+        return { ...player, catchphrase: 'O bem prevalece.' }
+      }
+      return player
+    })
+    if (migrated) write(PLAYERS_KEY, nextPlayers)
+    return nextPlayers
+  }
+
   return {
     async listPlayers() {
-      return clone(read<Player[]>(PLAYERS_KEY, seedPlayers))
+      return clone(readPlayers())
     },
     async listGames() {
       return clone(read<Game[]>(GAMES_KEY, seedGames))
@@ -35,7 +49,7 @@ export function createLocalRepository(storage: StorageLike): DominoRepository {
       return clone(game)
     },
     async addPlayer(player) {
-      const players = read<Player[]>(PLAYERS_KEY, seedPlayers)
+      const players = readPlayers()
       if (players.some(({ name }) => name.localeCompare(player.name, 'pt-BR', { sensitivity: 'base' }) === 0)) {
         throw new Error('Já existe um jogador com esse nome.')
       }
@@ -43,13 +57,15 @@ export function createLocalRepository(storage: StorageLike): DominoRepository {
       return clone(player)
     },
     async updatePlayer(id, changes) {
-      const players = read<Player[]>(PLAYERS_KEY, seedPlayers)
+      const players = readPlayers()
       const current = players.find((player) => player.id === id)
       if (!current) throw new Error('Jogador não encontrado.')
-      const updated = { ...current, ...changes }
+      const normalizedChanges = changes.catchphrase === undefined
+        ? changes
+        : { ...changes, catchphrase: changes.catchphrase.trim() }
+      const updated = { ...current, ...normalizedChanges }
       write(PLAYERS_KEY, players.map((player) => player.id === id ? updated : player))
       return clone(updated)
     },
   }
 }
-

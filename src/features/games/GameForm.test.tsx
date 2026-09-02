@@ -44,6 +44,20 @@ describe('GameForm', () => {
     expect(onSave.mock.calls[0][0]).not.toHaveProperty('longitude')
   })
 
+  it('salva sem localização quando o provedor falha', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<GameForm players={seedPlayers} onSave={onSave} onCancel={() => {}} locate={async () => { throw new Error('permissão bloqueada') }} />)
+
+    await user.selectOptions(screen.getByLabelText('Vencedor 1'), 'cesar')
+    await user.selectOptions(screen.getByLabelText('Vencedor 2'), 'vinicius')
+    await user.selectOptions(screen.getByLabelText('Perdedor 1'), 'david')
+    await user.selectOptions(screen.getByLabelText('Perdedor 2'), 'emanoel')
+    await user.click(screen.getByRole('button', { name: /salvar partida/i }))
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce())
+  })
+
   it('mostra o erro quando um jogador aparece nas duas duplas', async () => {
     const user = userEvent.setup()
     render(<GameForm players={seedPlayers} onSave={() => {}} onCancel={() => {}} />)

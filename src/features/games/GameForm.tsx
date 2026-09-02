@@ -61,7 +61,12 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
     setSaving(true)
     setSaveError('')
     try {
-      const location = await locate()
+      let location: Awaited<ReturnType<NonNullable<GameFormProps['locate']>>>
+      try {
+        location = await locate()
+      } catch {
+        location = undefined
+      }
       await onSave({ ...draft, ...location })
     } catch {
       setSaveError('Não foi possível salvar. A partida continua preenchida para você tentar de novo.')

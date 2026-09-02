@@ -37,6 +37,33 @@ describe('estatísticas das sete partidas iniciais', () => {
     })
   })
 
+  it('desempata partidas do mesmo minuto pela criação e pelo id', () => {
+    const playedAt = '2026-09-02T14:00:00-03:00'
+    const makeGame = (id: string, createdAt: string, cesarWon: boolean) => ({
+      ...seedGames[0],
+      id,
+      playedAt,
+      createdAt,
+      winnerIds: cesarWon ? ['cesar', 'vinicius'] as [string, string] : ['david', 'emanoel'] as [string, string],
+      loserIds: cesarWon ? ['david', 'emanoel'] as [string, string] : ['cesar', 'vinicius'] as [string, string],
+    })
+    const games = [
+      makeGame('a', '2026-09-02T14:01:00-03:00', true),
+      makeGame('c', '2026-09-02T14:03:00-03:00', false),
+      makeGame('b', '2026-09-02T14:02:00-03:00', true),
+      makeGame('d', '2026-09-02T14:04:00-03:00', false),
+    ]
+
+    expect(getIndividualStats(seedPlayers, games).find(({ playerId }) => playerId === 'cesar')).toMatchObject({
+      maxWinStreak: 2,
+      maxLossStreak: 2,
+    })
+    expect(getPairStats(seedPlayers, games).find(({ label }) => label === 'César & Vinícius')).toMatchObject({
+      maxWinStreak: 2,
+      maxLossStreak: 2,
+    })
+  })
+
   it('trata a ordem dos parceiros como a mesma dupla', () => {
     const stats = getPairStats(seedPlayers, seedGames)
 

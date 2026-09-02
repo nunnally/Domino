@@ -138,7 +138,7 @@ button:focus-visible, select:focus-visible, input:focus-visible {
 .hero-avatar { width: 116px; height: 116px; border-width: 4px; box-shadow: 7px 7px 0 var(--ink); background: var(--surface); transform: rotate(-2deg); }
 
 .sticker { display: inline-flex; align-items: center; gap: 6px; width: max-content; padding: 6px 9px; border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); font-size: 12px; font-weight: 700; text-transform: uppercase; }
-.leader-copy > .sticker { position: absolute; left: 84px; top: -23px; transform: rotate(-4deg); }
+.leader-copy > .sticker { position: absolute; left: 84px; top: -23px; transform: rotate(-4deg); text-transform: none; }
 .leader-icon-sticker { padding-inline: 8px; }
 .sticker-yellow { background: var(--yellow); }
 .sticker-violet { background: var(--violet); }
@@ -357,6 +357,16 @@ button:focus-visible, select:focus-visible, input:focus-visible {
   .matchup-card.featured { grid-column: auto; }
   .add-player-form { grid-template-columns: 1fr 1fr; }
   .add-player-form .button { grid-column: 1 / -1; }
+}
+
+@media (max-width: 820px) {
+  .ranking-head.with-streaks, .pair-ranking-head.with-streaks { display: none; }
+  .ranking-row.with-streaks { grid-template-columns: 32px minmax(0, 1fr) 40px 40px 58px; min-height: 104px; padding: 8px 10px; }
+  .pair-ranking-row.with-streaks { grid-template-columns: 30px minmax(0, 1fr) 40px 62px; min-height: 118px; padding: 10px; }
+  .desktop-streak { display: none; }
+  .mobile-streaks { display: grid; gap: 3px; margin-top: 5px; }
+  .mobile-streaks small { display: flex; align-items: center; gap: 4px; width: auto; padding: 0; border: 0; background: transparent; font-size: 8px; font-weight: 700; text-transform: none; }
+  .pair-ranking-row > span:nth-of-type(2), .pair-ranking-row .loss { display: none; }
 }
 
 @media (max-width: 700px) {

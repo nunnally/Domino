@@ -46,4 +46,19 @@ describe('local repository', () => {
       catchphrase: 'Cheguei na mesa.',
     })
   })
+
+  it('atualiza dados locais antigos com a frase do César sem apagar personalizações', async () => {
+    const storage = createMemoryStorage()
+    const oldPlayers = [
+      { id: 'cesar', name: 'César', photoUrl: 'https://example.com/cesar.jpg', active: true, createdAt: '2026-09-02T08:00:00-03:00' },
+    ]
+    storage.setItem('domino-zaaaap:players:v1', JSON.stringify(oldPlayers))
+
+    const [cesar] = await createLocalRepository(storage).listPlayers()
+
+    expect(cesar).toMatchObject({
+      photoUrl: 'https://example.com/cesar.jpg',
+      catchphrase: 'O bem prevalece.',
+    })
+  })
 })

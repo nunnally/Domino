@@ -36,4 +36,13 @@ describe('RankingsPage', () => {
     expect(within(pairRecords).getByText('Sequência de vitórias')).toBeInTheDocument()
     expect(within(pairRecords).getByText('Sequência de derrotas')).toBeInTheDocument()
   })
+
+  it('não inventa recordistas quando ainda não há partidas', async () => {
+    const user = userEvent.setup()
+    render(<RankingsPage players={seedPlayers} games={[]} />)
+
+    expect(within(screen.getByRole('region', { name: 'Recordes individuais' })).getAllByText('Sem partidas ainda')).toHaveLength(2)
+    await user.click(screen.getByRole('tab', { name: /duplas/i }))
+    expect(within(screen.getByRole('region', { name: 'Recordes de duplas' })).getAllByText('Sem partidas ainda')).toHaveLength(2)
+  })
 })

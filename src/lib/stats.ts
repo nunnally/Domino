@@ -16,6 +16,11 @@ const canonicalPair = (ids: [string, string]) => [...ids].sort() as [string, str
 
 const pairKey = (ids: [string, string]) => canonicalPair(ids).join('::')
 
+const compareChronologically = (a: Game, b: Game) =>
+  new Date(a.playedAt).getTime() - new Date(b.playedAt).getTime()
+  || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  || a.id.localeCompare(b.id)
+
 const compareByRank = <T extends { wins: number; losses: number; winRate: number }>(
   a: T,
   b: T,
@@ -53,7 +58,7 @@ export function getIndividualStats(players: Player[], games: Game[]): Individual
   }
 
   const streaks = new Map<string, Streak>()
-  const chronologicalGames = [...games].sort((a, b) => new Date(a.playedAt).getTime() - new Date(b.playedAt).getTime())
+  const chronologicalGames = [...games].sort(compareChronologically)
   for (const game of chronologicalGames) {
     for (const id of game.winnerIds) {
       const stat = stats.get(id)
@@ -119,7 +124,7 @@ export function getPairStats(players: Player[], games: Game[]): PairStat[] {
     stats.set(key, existing)
   }
 
-  const chronologicalGames = [...games].sort((a, b) => new Date(a.playedAt).getTime() - new Date(b.playedAt).getTime())
+  const chronologicalGames = [...games].sort(compareChronologically)
   for (const game of chronologicalGames) {
     addResult(game.winnerIds, true)
     addResult(game.loserIds, false)
