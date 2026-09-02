@@ -400,8 +400,8 @@ button:focus-visible, select:focus-visible, input:focus-visible {
   .inner-page-heading p:last-child { font-size: 15px; }
   .inner-page-heading .domino-tile { width: 69px; height: 39px; margin: 0 5px 7px 0; }
   .pair-ranking-head { display: none; }
-  .pair-ranking-row { grid-template-columns: 30px minmax(0, 1fr) 40px 40px 66px; min-height: 90px; padding: 10px; }
-  .pair-ranking-row > span:nth-of-type(1) { display: none; }
+  .pair-ranking-row { grid-template-columns: 30px minmax(0, 1fr) 40px 66px; min-height: 90px; padding: 10px; }
+  .pair-ranking-row > span:nth-of-type(2) { display: none; }
   .pair-ranking-row .loss { display: none; }
   .pair-ranking-name { gap: 8px; }
   .pair-ranking-name strong { font-size: 13px; }

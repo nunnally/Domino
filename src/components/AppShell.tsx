@@ -11,12 +11,12 @@ interface AppShellProps {
   children: ReactNode
 }
 
-const navItems: Array<{ id: PageId; label: string; icon: typeof Home }> = [
-  { id: 'home', label: 'Início', icon: Home },
-  { id: 'rankings', label: 'Rankings', icon: Crown },
-  { id: 'rivalries', label: 'Confrontos', icon: Swords },
-  { id: 'players', label: 'Jogadores', icon: UserRound },
-  { id: 'history', label: 'Histórico', icon: History },
+const navItems: Array<{ id: PageId; label: string; mobileLabel: string; icon: typeof Home }> = [
+  { id: 'home', label: 'Início', mobileLabel: 'Início', icon: Home },
+  { id: 'rankings', label: 'Rankings', mobileLabel: 'Ranking', icon: Crown },
+  { id: 'rivalries', label: 'Confrontos', mobileLabel: 'Duelos', icon: Swords },
+  { id: 'players', label: 'Jogadores', mobileLabel: 'Jogadores', icon: UserRound },
+  { id: 'history', label: 'Histórico', mobileLabel: 'Histórico', icon: History },
 ]
 
 export function AppShell({ activePage, onNavigate, children }: AppShellProps) {
@@ -44,10 +44,10 @@ export function AppShell({ activePage, onNavigate, children }: AppShellProps) {
       <main>{children}</main>
 
       <nav className="mobile-nav" aria-label="Navegação no celular">
-        {navItems.map(({ id, label, icon: Icon }) => (
+        {navItems.map(({ id, mobileLabel, icon: Icon }) => (
           <button className={activePage === id ? 'mobile-nav-item active' : 'mobile-nav-item'} type="button" key={id} onClick={() => onNavigate(id)}>
             <Icon size={21} strokeWidth={2.5} />
-            <span>{label}</span>
+            <span>{mobileLabel}</span>
           </button>
         ))}
         <button className="mobile-nav-item mobile-add" type="button" onClick={() => onNavigate('new-game')} aria-label="Cadastrar partida">

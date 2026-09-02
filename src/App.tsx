@@ -15,11 +15,18 @@ interface AppProps {
   repository?: DominoRepository
 }
 
+const pageIds: PageId[] = ['home', 'rankings', 'rivalries', 'players', 'history', 'new-game']
+
+const pageFromHash = (): PageId => {
+  const candidate = window.location.hash.replace(/^#\/?/, '')
+  return pageIds.includes(candidate as PageId) ? candidate as PageId : 'home'
+}
+
 export function App({ repository: suppliedRepository }: AppProps) {
   const [repository, setRepository] = useState<DominoRepository | null>(suppliedRepository ?? null)
   const [players, setPlayers] = useState<Player[]>([])
   const [games, setGames] = useState<Game[]>([])
-  const [page, setPage] = useState<PageId>('home')
+  const [page, setPage] = useState<PageId>(pageFromHash)
   const [period, setPeriod] = useState<PeriodFilter>('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -53,6 +60,12 @@ export function App({ repository: suppliedRepository }: AppProps) {
     void boot()
     return () => { cancelled = true }
   }, [loadData, suppliedRepository])
+
+  useEffect(() => {
+    const syncPage = () => setPage(pageFromHash())
+    window.addEventListener('hashchange', syncPage)
+    return () => window.removeEventListener('hashchange', syncPage)
+  }, [])
 
   const navigate = (nextPage: PageId) => {
     setPage(nextPage)

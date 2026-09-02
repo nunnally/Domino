@@ -19,6 +19,15 @@ export function PlayersPage({ players, editable, onAddPlayer, onTogglePlayer }: 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
+  const togglePlayer = async (player: Player) => {
+    setError('')
+    try {
+      await onTogglePlayer(player)
+    } catch {
+      setError('Não foi possível alterar esse jogador agora.')
+    }
+  }
+
   const submit = async (event: FormEvent) => {
     event.preventDefault()
     if (!name.trim()) return setError('Diga o nome do novo jogador.')
@@ -52,6 +61,8 @@ export function PlayersPage({ players, editable, onAddPlayer, onTogglePlayer }: 
         {editable ? <button className="button button-primary" type="button" onClick={() => setShowForm((visible) => !visible)}><Plus size={19} strokeWidth={3} /> Novo jogador</button> : <span className="access-note">Use o PIN em Nova partida para editar</span>}
       </div>
 
+      {error && !showForm && <p className="form-error" role="alert">{error}</p>}
+
       {showForm && (
         <form className="add-player-form" onSubmit={submit}>
           <label><span>Nome</span><input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex.: João" autoFocus /></label>
@@ -68,7 +79,7 @@ export function PlayersPage({ players, editable, onAddPlayer, onTogglePlayer }: 
             <PlayerAvatar name={player.name} photoUrl={player.photoUrl} className="player-card-avatar" />
             <h2>{player.name}</h2>
             <p>{player.active ? 'Na ativa' : 'Fora da mesa'}</p>
-            {editable && <button className="player-toggle" type="button" onClick={() => void onTogglePlayer(player)}>{player.active ? <UserRoundX size={17} /> : <UserRoundCheck size={17} />}{player.active ? 'Arquivar' : 'Reativar'}</button>}
+            {editable && <button className="player-toggle" type="button" onClick={() => void togglePlayer(player)}>{player.active ? <UserRoundX size={17} /> : <UserRoundCheck size={17} />}{player.active ? 'Arquivar' : 'Reativar'}</button>}
           </article>
         ))}
       </div>

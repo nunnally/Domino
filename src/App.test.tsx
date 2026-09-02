@@ -13,4 +13,12 @@ describe('dashboard', () => {
     expect(screen.getAllByText(/4 vitórias/i).length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: /nova partida/i })).toBeInTheDocument()
   })
+
+  it('abre a página indicada no hash ao recarregar', async () => {
+    window.location.hash = 'history'
+    render(<App repository={createLocalRepository(createMemoryStorage())} />)
+
+    expect(await screen.findByRole('heading', { level: 1, name: /histórico/i })).toBeInTheDocument()
+    window.location.hash = ''
+  })
 })
