@@ -1,4 +1,4 @@
-import { ArrowRight, Flame, Medal, Trophy } from "lucide-react";
+import { ArrowRight, Crown, Flame, Medal, Trophy } from "lucide-react";
 
 import { DominoTile } from "../../components/DominoTile";
 import { PlayerAvatar } from "../../components/PlayerAvatar";
@@ -109,32 +109,70 @@ export function Dashboard({
         </section>
       ) : (
         <>
-          <section className="leader-stage">
-            <div className="leader-copy">
-              <span className="sticker sticker-yellow" aria-label={leader.catchphrase ? undefined : "Líder"}>
-                <Trophy size={16} /> {leader.catchphrase}
-              </span>
-              <PlayerAvatar
-                name={leader.name}
-                photoUrl={leader.photoUrl}
-                className="hero-avatar"
-                mood="champion"
-              />
-              <div className="leader-details">
-                <p className="leader-kicker">Líder individual</p>
-                <h2>{leader.name}</h2>
-                <p className="leader-record">
-                  <strong>{leader.wins} vitórias</strong> · {leader.losses}{" "}
-                  {leader.losses === 1 ? "derrota" : "derrotas"}
-                </p>
-              </div>
-            </div>
-            <div className="leader-score">
-              <span>{leader.winRate}%</span>
-              <small>de aproveitamento</small>
-            </div>
-            <DominoTile left={4} right={1} className="corner-domino" />
-          </section>
+      <section className="leader-stage leader-fighter-card">
+  <div className="leader-copy">
+    {/* Frase do personagem */}
+    <span
+      className="sticker sticker-yellow leader-bubble-enter"
+      aria-label={leader.catchphrase ? undefined : "Líder"}
+    >
+      <Trophy size={16} />
+      {leader.catchphrase}
+    </span>
+
+    {/* Avatar + efeito de impacto + coroa */}
+    <div className="leader-avatar-wrap leader-avatar-enter">
+      <span className="leader-impact" aria-hidden="true" />
+
+      <PlayerAvatar
+        name={leader.name}
+        photoUrl={leader.photoUrl}
+        className="hero-avatar"
+        mood="champion"
+      />
+
+      <span className="leader-crown-enter" aria-hidden="true">
+        <Crown
+          className="leader-crown-floating"
+          strokeWidth={2.5}
+        />
+      </span>
+    </div>
+
+    {/* Informações do líder */}
+    <div className="leader-details">
+      <p className="leader-kicker leader-title-enter">
+        Líder individual
+      </p>
+
+      <h2 className="leader-info-enter leader-name-enter">
+        {leader.name}
+      </h2>
+
+      <p className="leader-record leader-info-enter leader-record-enter">
+        <strong>{leader.wins} vitórias</strong> · {leader.losses}{" "}
+        {leader.losses === 1 ? "derrota" : "derrotas"}
+      </p>
+    </div>
+  </div>
+
+  {/* Score */}
+  <div className="leader-score">
+    <span className="leader-info-enter leader-score-enter">
+      {leader.winRate}%
+    </span>
+
+    <small className="leader-info-enter leader-score-label-enter">
+      de aproveitamento
+    </small>
+  </div>
+
+  <DominoTile
+    left={4}
+    right={1}
+    className="corner-domino"
+  />
+</section>
 
           <section className="score-strip" aria-label="Resumo do período">
             <div>
