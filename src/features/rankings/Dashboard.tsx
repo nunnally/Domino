@@ -111,8 +111,8 @@ export function Dashboard({
         <>
           <section className="leader-stage">
             <div className="leader-copy">
-              <span className="sticker sticker-yellow">
-                <Trophy size={16} /> LALALA
+              <span className="sticker sticker-yellow" aria-label={leader.catchphrase ? undefined : "Líder"}>
+                <Trophy size={16} /> {leader.catchphrase}
               </span>
               <PlayerAvatar
                 name={leader.name}

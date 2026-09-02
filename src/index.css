@@ -1092,7 +1092,7 @@ input:focus-visible {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
-  margin-bottom: 24px;
+  margin: 32px 0 24px;
 }
 .streak-record {
   display: grid;
@@ -1895,6 +1895,7 @@ input:focus-visible {
   .streak-records {
     grid-template-columns: 1fr;
     gap: 12px;
+    margin-top: 24px;
   }
   .streak-record {
     min-height: 82px;
