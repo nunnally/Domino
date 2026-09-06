@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -63,6 +63,41 @@ describe('GameForm', () => {
         senaIds: ['emanoel'],
       }))
     })
+  })
+
+  it('abre o seletor customizado com avatar e nome', async () => {
+    const user = userEvent.setup()
+    render(<GameForm players={seedPlayers} onSave={() => {}} onCancel={() => {}} />)
+
+    await user.click(screen.getByRole('button', { name: /vencedor 1: escolher jogador/i }))
+
+    const menu = screen.getByRole('listbox', { name: /opções de vencedor 1/i })
+    expect(within(menu).getByRole('option', { name: /césar/i })).toBeInTheDocument()
+    expect(within(menu).getByRole('option', { name: /foto de césar.*césar/i })).toBeInTheDocument()
+  })
+
+  it('permite apenas uma gabuada e uma sena por partida', async () => {
+    const user = userEvent.setup()
+    render(<GameForm players={seedPlayers} onSave={() => {}} onCancel={() => {}} />)
+
+    await user.selectOptions(screen.getByLabelText('Vencedor 1'), 'cesar')
+    await user.selectOptions(screen.getByLabelText('Vencedor 2'), 'vinicius')
+    await user.selectOptions(screen.getByLabelText('Perdedor 1'), 'david')
+    await user.selectOptions(screen.getByLabelText('Perdedor 2'), 'emanoel')
+    const cesarBonus = screen.getByRole('checkbox', { name: /gabuada.*césar/i })
+    const viniciusBonus = screen.getByRole('checkbox', { name: /gabuada.*vinícius/i })
+    const davidBonus = screen.getByRole('checkbox', { name: /sena.*david/i })
+    const emanoelBonus = screen.getByRole('checkbox', { name: /sena.*emanoel/i })
+
+    await user.click(cesarBonus)
+    await user.click(viniciusBonus)
+    await user.click(davidBonus)
+    await user.click(emanoelBonus)
+
+    expect(cesarBonus).not.toBeChecked()
+    expect(viniciusBonus).toBeChecked()
+    expect(davidBonus).not.toBeChecked()
+    expect(emanoelBonus).toBeChecked()
   })
 
   it('salva sem localização quando o provedor falha', async () => {

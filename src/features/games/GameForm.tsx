@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react'
-import { ArrowLeft, MapPin, Save } from 'lucide-react'
+import { ArrowLeft, ChevronDown, MapPin, Save } from 'lucide-react'
 
 import { DominoTile } from '../../components/DominoTile'
 import { PlayerAvatar } from '../../components/PlayerAvatar'
@@ -38,6 +38,7 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
   const activePlayers = useMemo(() => players.filter(({ active }) => active), [players])
   const [slots, setSlots] = useState<Record<Slot, string>>({ winner1: '', winner2: '', loser1: '', loser2: '' })
   const [bonuses, setBonuses] = useState<Record<Slot, boolean>>({ winner1: false, winner2: false, loser1: false, loser2: false })
+  const [openSlot, setOpenSlot] = useState<Slot | null>(null)
   const [playedAt, setPlayedAt] = useState(localDateTime)
   const [winnerScore, setWinnerScore] = useState('')
   const [loserScore, setLoserScore] = useState('')
@@ -50,7 +51,19 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
     setBonuses((current) => ({ ...current, [slot]: false }))
   }
 
-  const updateBonus = (slot: Slot, checked: boolean) => setBonuses((current) => ({ ...current, [slot]: checked }))
+  const choosePlayer = (slot: Slot, value: string) => {
+    updateSlot(slot, value)
+    setOpenSlot(null)
+  }
+
+  const updateExclusiveBonus = (slot: Slot, checked: boolean) => {
+    setBonuses((current) => {
+      const next = { ...current }
+      const group: Slot[] = slot.startsWith('winner') ? ['winner1', 'winner2'] : ['loser1', 'loser2']
+      group.forEach((other) => { next[other] = other === slot ? checked : false })
+      return next
+    })
+  }
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
@@ -91,18 +104,43 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
       <div className="player-select">
         <span>{label}</span>
         <div className="player-select-control">
-          {selected && <PlayerAvatar name={selected.name} photoUrl={selected.photoUrl} mood="serious" />}
-          <select value={slots[slot]} onChange={(event) => updateSlot(slot, event.target.value)} aria-label={label}>
+          <button
+            className="player-picker-trigger"
+            type="button"
+            aria-haspopup="listbox"
+            aria-expanded={openSlot === slot}
+            aria-label={`${label}: ${selected?.name ?? 'Escolher jogador'}`}
+            onClick={() => setOpenSlot((current) => current === slot ? null : slot)}
+          >
+            {selected && <PlayerAvatar name={selected.name} photoUrl={selected.photoUrl} mood="serious" />}
+            <span>{selected?.name ?? 'Escolher jogador'}</span>
+            <ChevronDown size={18} aria-hidden="true" />
+          </button>
+          <select className="player-picker-native" value={slots[slot]} onChange={(event) => choosePlayer(slot, event.target.value)} aria-label={label} tabIndex={-1}>
             <option value="">Escolher jogador</option>
             {activePlayers.map((player) => <option value={player.id} key={player.id}>{player.name}</option>)}
           </select>
+          {openSlot === slot && (
+            <div className="player-picker-menu" role="listbox" aria-label={`Opções de ${label}`}>
+              <button className="player-picker-option" type="button" role="option" aria-selected={!selected} onClick={() => choosePlayer(slot, '')}>
+                <span className="player-picker-placeholder">—</span>
+                <span>Escolher jogador</span>
+              </button>
+              {activePlayers.map((player) => (
+                <button className="player-picker-option" type="button" role="option" aria-selected={player.id === selected?.id} key={player.id} onClick={() => choosePlayer(slot, player.id)}>
+                  <PlayerAvatar name={player.name} photoUrl={player.photoUrl} mood="serious" />
+                  <span>{player.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         {selected && (
           <label className="bonus-toggle">
             <input
               type="checkbox"
               checked={bonuses[slot]}
-              onChange={(event) => updateBonus(slot, event.target.checked)}
+              onChange={(event) => updateExclusiveBonus(slot, event.target.checked)}
               aria-label={`${bonusLabel} — ${selected.name}`}
             />
             <span>{bonusLabel}</span>
