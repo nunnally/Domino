@@ -1372,7 +1372,15 @@ input:focus-visible {
   text-align: left;
   cursor: pointer;
 }
-.player-picker-trigger > span {
+.player-picker-trigger > .player-avatar {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.player-picker-trigger .player-picker-label {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -1421,8 +1429,7 @@ input:focus-visible {
 .player-picker-option:last-child {
   border-bottom: 0;
 }
-.player-picker-option:hover,
-.player-picker-option[aria-selected="true"] {
+.player-picker-option:hover {
   background: var(--yellow);
 }
 .player-picker-option .player-avatar {
@@ -1440,8 +1447,8 @@ input:focus-visible {
   font-size: 20px;
 }
 .player-select-control:focus-within {
-  background: var(--yellow);
-  box-shadow: var(--shadow-click);
+  background: var(--surface);
+  box-shadow: none;
 }
 .bonus-toggle {
   display: inline-flex;
@@ -1460,6 +1467,11 @@ input:focus-visible {
   width: 18px;
   min-height: 18px;
   accent-color: var(--red);
+}
+.bonus-toggle input:focus {
+  background: transparent;
+  box-shadow: none;
+  outline: 0;
 }
 .versus-stamp {
   align-self: center;

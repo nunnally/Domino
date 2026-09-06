@@ -37,7 +37,8 @@ type Slot = 'winner1' | 'winner2' | 'loser1' | 'loser2'
 export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame }: GameFormProps) {
   const activePlayers = useMemo(() => players.filter(({ active }) => active), [players])
   const [slots, setSlots] = useState<Record<Slot, string>>({ winner1: '', winner2: '', loser1: '', loser2: '' })
-  const [bonuses, setBonuses] = useState<Record<Slot, boolean>>({ winner1: false, winner2: false, loser1: false, loser2: false })
+  const [gabuadaSlot, setGabuadaSlot] = useState<Slot | null>(null)
+  const [senaSlot, setSenaSlot] = useState<Slot | null>(null)
   const [openSlot, setOpenSlot] = useState<Slot | null>(null)
   const [playedAt, setPlayedAt] = useState(localDateTime)
   const [winnerScore, setWinnerScore] = useState('')
@@ -48,7 +49,8 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
 
   const updateSlot = (slot: Slot, value: string) => {
     setSlots((current) => ({ ...current, [slot]: value }))
-    setBonuses((current) => ({ ...current, [slot]: false }))
+    if (gabuadaSlot === slot) setGabuadaSlot(null)
+    if (senaSlot === slot) setSenaSlot(null)
   }
 
   const choosePlayer = (slot: Slot, value: string) => {
@@ -56,13 +58,9 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
     setOpenSlot(null)
   }
 
-  const updateExclusiveBonus = (slot: Slot, checked: boolean) => {
-    setBonuses((current) => {
-      const next = { ...current }
-      const group: Slot[] = slot.startsWith('winner') ? ['winner1', 'winner2'] : ['loser1', 'loser2']
-      group.forEach((other) => { next[other] = other === slot ? checked : false })
-      return next
-    })
+  const updateBonus = (slot: Slot, bonus: 'gabuada' | 'sena', checked: boolean) => {
+    if (bonus === 'gabuada') setGabuadaSlot(checked ? slot : null)
+    else setSenaSlot(checked ? slot : null)
   }
 
   const submit = async (event: FormEvent) => {
@@ -73,8 +71,8 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
       playedAt: playedAt ? new Date(playedAt).toISOString() : '',
       ...(winnerScore === '' ? {} : { winnerScore: Number(winnerScore) }),
       ...(loserScore === '' ? {} : { loserScore: Number(loserScore) }),
-      gabuadaIds: (['winner1', 'winner2'] as Slot[]).filter((slot) => bonuses[slot] && slots[slot]).map((slot) => slots[slot]),
-      senaIds: (['loser1', 'loser2'] as Slot[]).filter((slot) => bonuses[slot] && slots[slot]).map((slot) => slots[slot]),
+      gabuadaIds: gabuadaSlot && slots[gabuadaSlot] ? [slots[gabuadaSlot]] : [],
+      senaIds: senaSlot && slots[senaSlot] ? [slots[senaSlot]] : [],
     }
     const nextErrors = validateGameDraft(draft)
     setErrors(nextErrors)
@@ -97,7 +95,7 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
     }
   }
 
-  const select = (label: string, slot: Slot, bonusLabel: 'Gabuada' | 'Sena') => {
+  const select = (label: string, slot: Slot, bonusLabels: Array<'Gabuada' | 'Sena'>) => {
     const selected = activePlayers.find((player) => player.id === slots[slot])
 
     return (
@@ -113,7 +111,7 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
             onClick={() => setOpenSlot((current) => current === slot ? null : slot)}
           >
             {selected && <PlayerAvatar name={selected.name} photoUrl={selected.photoUrl} mood="serious" />}
-            <span>{selected?.name ?? 'Escolher jogador'}</span>
+            <span className="player-picker-label">{selected?.name ?? 'Escolher jogador'}</span>
             <ChevronDown size={18} aria-hidden="true" />
           </button>
           <select className="player-picker-native" value={slots[slot]} onChange={(event) => choosePlayer(slot, event.target.value)} aria-label={label} tabIndex={-1}>
@@ -135,17 +133,21 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
             </div>
           )}
         </div>
-        {selected && (
-          <label className="bonus-toggle">
-            <input
-              type="checkbox"
-              checked={bonuses[slot]}
-              onChange={(event) => updateExclusiveBonus(slot, event.target.checked)}
-              aria-label={`${bonusLabel} — ${selected.name}`}
-            />
-            <span>{bonusLabel}</span>
-          </label>
-        )}
+        {selected && bonusLabels.map((bonusLabel) => {
+          const bonus = bonusLabel.toLowerCase() as 'gabuada' | 'sena'
+          const checked = bonus === 'gabuada' ? gabuadaSlot === slot : senaSlot === slot
+          return (
+            <label className="bonus-toggle" key={bonusLabel}>
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={(event) => updateBonus(slot, bonus, event.target.checked)}
+                aria-label={`${bonusLabel} — ${selected.name}`}
+              />
+              <span>{bonusLabel}</span>
+            </label>
+          )
+        })}
       </div>
     )
   }
@@ -163,8 +165,8 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
           <span className="team-number">01</span>
           <div className="team-heading"><span className="sticker sticker-yellow">Vencedores</span><h2>Quem bateu?</h2></div>
           <div className="player-selects">
-            {select('Vencedor 1', 'winner1', 'Gabuada')}
-            {select('Vencedor 2', 'winner2', 'Gabuada')}
+            {select('Vencedor 1', 'winner1', ['Gabuada', 'Sena'])}
+            {select('Vencedor 2', 'winner2', ['Gabuada', 'Sena'])}
           </div>
         </section>
 
@@ -174,8 +176,8 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
           <span className="team-number">02</span>
           <div className="team-heading"><span className="sticker sticker-violet">Perdedores</span><h2>Quem levou?</h2></div>
           <div className="player-selects">
-            {select('Perdedor 1', 'loser1', 'Sena')}
-            {select('Perdedor 2', 'loser2', 'Sena')}
+            {select('Perdedor 1', 'loser1', ['Sena'])}
+            {select('Perdedor 2', 'loser2', ['Sena'])}
           </div>
         </section>
 
