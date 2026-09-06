@@ -16,6 +16,8 @@ export interface Game {
   loserIds: [string, string]
   winnerScore?: number
   loserScore?: number
+  gabuadaIds?: string[]
+  senaIds?: string[]
   latitude?: number
   longitude?: number
   createdAt: string
@@ -29,6 +31,8 @@ export interface IndividualStat {
   games: number
   wins: number
   losses: number
+  gabuadas: number
+  senas: number
   winRate: number
   maxWinStreak: number
   maxLossStreak: number

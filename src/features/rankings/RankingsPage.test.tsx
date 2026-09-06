@@ -9,7 +9,19 @@ describe('RankingsPage', () => {
   it('mostra vitórias, derrotas e aproveitamento individual', () => {
     render(<RankingsPage players={seedPlayers} games={seedGames} />)
 
-    expect(screen.getByRole('row', { name: /césar, 4 vitórias, 1 derrotas, 80%/i })).toBeInTheDocument()
+    expect(screen.getByRole('row', { name: /césar, 5 vitórias, 1 derrotas, 83.3%/i })).toBeInTheDocument()
+  })
+
+  it('mostra o ranking de gabuadas', () => {
+    const games = [
+      { ...seedGames[0], gabuadaIds: ['cesar'] as string[] },
+      { ...seedGames[1], gabuadaIds: ['cesar'] as string[] },
+    ]
+    render(<RankingsPage players={seedPlayers} games={games} />)
+
+    const ranking = screen.getByRole('region', { name: /ranking de gabuadas/i })
+    expect(within(ranking).getByText('César')).toBeInTheDocument()
+    expect(within(ranking).getByText('2')).toBeInTheDocument()
   })
 
   it('identifica duplas com amostra pequena', async () => {
@@ -18,7 +30,7 @@ describe('RankingsPage', () => {
 
     await user.click(screen.getByRole('tab', { name: /duplas/i }))
     expect(screen.getByText('Emanoel & Vinícius')).toBeInTheDocument()
-    expect(screen.getByText('Amostra pequena')).toBeInTheDocument()
+    expect(screen.getAllByText('Amostra pequena').length).toBeGreaterThan(0)
   })
 
   it('mostra os recordes históricos de sequências individuais e de duplas', async () => {

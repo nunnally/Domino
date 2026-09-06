@@ -25,7 +25,7 @@ export function createLocalRepository(storage: StorageLike): DominoRepository {
   const readPlayers = () => {
     const players = read<Player[]>(PLAYERS_KEY, seedPlayers)
     let migrated = false
-    const nextPlayers = players.map((player) => {
+    let nextPlayers = players.map((player) => {
       if (player.id === 'cesar' && player.catchphrase === undefined) {
         migrated = true
         return { ...player, catchphrase: 'O bem prevalece.' }
@@ -36,6 +36,13 @@ export function createLocalRepository(storage: StorageLike): DominoRepository {
       }
       return player
     })
+    if (!nextPlayers.some((player) => player.id === 'joice')) {
+      const joice = seedPlayers.find((player) => player.id === 'joice')
+      if (joice) {
+        nextPlayers = [...nextPlayers, joice]
+        migrated = true
+      }
+    }
     if (migrated) write(PLAYERS_KEY, nextPlayers)
     return nextPlayers
   }
@@ -45,7 +52,27 @@ export function createLocalRepository(storage: StorageLike): DominoRepository {
       return clone(readPlayers())
     },
     async listGames() {
-      return clone(read<Game[]>(GAMES_KEY, seedGames))
+      const games = read<Game[]>(GAMES_KEY, seedGames)
+      let migrated = false
+      const nextGames = games.map((game) => {
+        const seeded = seedGames.find(({ id }) => id === game.id)
+        if (!seeded) return game
+        const next = {
+          ...game,
+          ...(seeded.gabuadaIds && !game.gabuadaIds ? { gabuadaIds: seeded.gabuadaIds } : {}),
+          ...(seeded.senaIds && !game.senaIds ? { senaIds: seeded.senaIds } : {}),
+        }
+        migrated ||= next.gabuadaIds !== game.gabuadaIds || next.senaIds !== game.senaIds
+        return next
+      })
+      for (const seeded of seedGames) {
+        if (!nextGames.some(({ id }) => id === seeded.id) && (seeded.id === 'seed-8' || seeded.id === 'seed-9')) {
+          nextGames.push(seeded)
+          migrated = true
+        }
+      }
+      if (migrated) write(GAMES_KEY, nextGames)
+      return clone(nextGames)
     },
     async addGame(game) {
       const games = read<Game[]>(GAMES_KEY, seedGames)

@@ -1335,6 +1335,51 @@ input:focus-visible {
   display: grid;
   gap: 7px;
 }
+.player-select-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 4px 8px 4px 5px;
+  border: 3px solid var(--ink);
+  background: var(--surface);
+}
+.player-select-control .player-avatar {
+  width: 36px;
+  height: 36px;
+  border-width: 2px;
+}
+.player-select-control select {
+  min-height: 40px;
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.player-select-control:focus-within {
+  background: var(--yellow);
+  box-shadow: var(--shadow-click);
+}
+.bonus-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  width: fit-content;
+  padding: 5px 9px;
+  border: 2px solid var(--ink);
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.bonus-toggle input {
+  width: 18px;
+  min-height: 18px;
+  accent-color: var(--red);
+}
 .versus-stamp {
   align-self: center;
   justify-self: center;
@@ -1584,6 +1629,67 @@ input:focus-visible {
   justify-content: center;
   gap: 6px;
   font-weight: 700;
+}
+.gabuada-ranking {
+  margin-top: 28px;
+  padding: 24px;
+  border: 3px solid var(--ink);
+  background: var(--surface);
+  box-shadow: var(--shadow-click);
+}
+.gabuada-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 16px;
+  border-bottom: 3px solid var(--ink);
+}
+.gabuada-heading h2 {
+  margin: 14px 0 0;
+  font-size: 32px;
+  line-height: 1;
+}
+.gabuada-heading p {
+  max-width: 300px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+}
+.gabuada-list {
+  display: grid;
+}
+.gabuada-row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 56px;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  border-bottom: 2px solid var(--ink);
+}
+.gabuada-row:last-child {
+  border-bottom: 0;
+}
+.gabuada-player {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+}
+.gabuada-player .player-avatar {
+  width: 36px;
+  height: 36px;
+  border-width: 2px;
+}
+.gabuada-count {
+  justify-self: end;
+  min-width: 42px;
+  padding: 5px 8px;
+  border: 2px solid var(--ink);
+  background: var(--yellow);
+  font-size: 18px;
+  text-align: center;
 }
 .mini-pair-avatars {
   display: flex;
@@ -2602,6 +2708,19 @@ input:focus-visible {
   }
   .streak-record b {
     font-size: 34px;
+  }
+  .gabuada-ranking {
+    margin-top: 22px;
+    padding: 18px;
+  }
+  .gabuada-heading {
+    display: grid;
+    align-items: start;
+    gap: 10px;
+  }
+  .gabuada-heading p {
+    max-width: none;
+    text-align: left;
   }
   .mini-pair-avatars .player-avatar {
     width: 34px;

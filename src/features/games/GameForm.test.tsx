@@ -44,6 +44,27 @@ describe('GameForm', () => {
     expect(onSave.mock.calls[0][0]).not.toHaveProperty('longitude')
   })
 
+  it('envia gabuada e sena opcionais dos jogadores selecionados', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<GameForm players={seedPlayers} onSave={onSave} onCancel={() => {}} locate={async () => undefined} />)
+
+    await user.selectOptions(screen.getByLabelText('Vencedor 1'), 'cesar')
+    await user.selectOptions(screen.getByLabelText('Vencedor 2'), 'vinicius')
+    await user.selectOptions(screen.getByLabelText('Perdedor 1'), 'david')
+    await user.selectOptions(screen.getByLabelText('Perdedor 2'), 'emanoel')
+    await user.click(screen.getByRole('checkbox', { name: /gabuada.*césar/i }))
+    await user.click(screen.getByRole('checkbox', { name: /sena.*emanoel/i }))
+    await user.click(screen.getByRole('button', { name: /salvar partida/i }))
+
+    await waitFor(() => {
+      expect(onSave).toHaveBeenCalledWith(expect.objectContaining({
+        gabuadaIds: ['cesar'],
+        senaIds: ['emanoel'],
+      }))
+    })
+  })
+
   it('salva sem localização quando o provedor falha', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()

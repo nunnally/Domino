@@ -2,6 +2,7 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { ArrowLeft, MapPin, Save } from 'lucide-react'
 
 import { DominoTile } from '../../components/DominoTile'
+import { PlayerAvatar } from '../../components/PlayerAvatar'
 import type { Player } from '../../lib/types'
 import { validateGameDraft, type GameDraft, type ValidationErrors } from '../../lib/validation'
 
@@ -36,6 +37,7 @@ type Slot = 'winner1' | 'winner2' | 'loser1' | 'loser2'
 export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame }: GameFormProps) {
   const activePlayers = useMemo(() => players.filter(({ active }) => active), [players])
   const [slots, setSlots] = useState<Record<Slot, string>>({ winner1: '', winner2: '', loser1: '', loser2: '' })
+  const [bonuses, setBonuses] = useState<Record<Slot, boolean>>({ winner1: false, winner2: false, loser1: false, loser2: false })
   const [playedAt, setPlayedAt] = useState(localDateTime)
   const [winnerScore, setWinnerScore] = useState('')
   const [loserScore, setLoserScore] = useState('')
@@ -43,7 +45,12 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
   const [saveError, setSaveError] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const updateSlot = (slot: Slot, value: string) => setSlots((current) => ({ ...current, [slot]: value }))
+  const updateSlot = (slot: Slot, value: string) => {
+    setSlots((current) => ({ ...current, [slot]: value }))
+    setBonuses((current) => ({ ...current, [slot]: false }))
+  }
+
+  const updateBonus = (slot: Slot, checked: boolean) => setBonuses((current) => ({ ...current, [slot]: checked }))
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
@@ -53,6 +60,8 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
       playedAt: playedAt ? new Date(playedAt).toISOString() : '',
       ...(winnerScore === '' ? {} : { winnerScore: Number(winnerScore) }),
       ...(loserScore === '' ? {} : { loserScore: Number(loserScore) }),
+      gabuadaIds: (['winner1', 'winner2'] as Slot[]).filter((slot) => bonuses[slot] && slots[slot]).map((slot) => slots[slot]),
+      senaIds: (['loser1', 'loser2'] as Slot[]).filter((slot) => bonuses[slot] && slots[slot]).map((slot) => slots[slot]),
     }
     const nextErrors = validateGameDraft(draft)
     setErrors(nextErrors)
@@ -75,15 +84,33 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
     }
   }
 
-  const select = (label: string, slot: Slot) => (
-    <label className="player-select">
-      <span>{label}</span>
-      <select value={slots[slot]} onChange={(event) => updateSlot(slot, event.target.value)} aria-label={label}>
-        <option value="">Escolher jogador</option>
-        {activePlayers.map((player) => <option value={player.id} key={player.id}>{player.name}</option>)}
-      </select>
-    </label>
-  )
+  const select = (label: string, slot: Slot, bonusLabel: 'Gabuada' | 'Sena') => {
+    const selected = activePlayers.find((player) => player.id === slots[slot])
+
+    return (
+      <div className="player-select">
+        <span>{label}</span>
+        <div className="player-select-control">
+          {selected && <PlayerAvatar name={selected.name} photoUrl={selected.photoUrl} mood="serious" />}
+          <select value={slots[slot]} onChange={(event) => updateSlot(slot, event.target.value)} aria-label={label}>
+            <option value="">Escolher jogador</option>
+            {activePlayers.map((player) => <option value={player.id} key={player.id}>{player.name}</option>)}
+          </select>
+        </div>
+        {selected && (
+          <label className="bonus-toggle">
+            <input
+              type="checkbox"
+              checked={bonuses[slot]}
+              onChange={(event) => updateBonus(slot, event.target.checked)}
+              aria-label={`${bonusLabel} — ${selected.name}`}
+            />
+            <span>{bonusLabel}</span>
+          </label>
+        )}
+      </div>
+    )
+  }
 
   return (
     <section className="page-wrap game-form-page">
@@ -98,8 +125,8 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
           <span className="team-number">01</span>
           <div className="team-heading"><span className="sticker sticker-yellow">Vencedores</span><h2>Quem bateu?</h2></div>
           <div className="player-selects">
-            {select('Vencedor 1', 'winner1')}
-            {select('Vencedor 2', 'winner2')}
+            {select('Vencedor 1', 'winner1', 'Gabuada')}
+            {select('Vencedor 2', 'winner2', 'Gabuada')}
           </div>
         </section>
 
@@ -109,8 +136,8 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
           <span className="team-number">02</span>
           <div className="team-heading"><span className="sticker sticker-violet">Perdedores</span><h2>Quem levou?</h2></div>
           <div className="player-selects">
-            {select('Perdedor 1', 'loser1')}
-            {select('Perdedor 2', 'loser2')}
+            {select('Perdedor 1', 'loser1', 'Sena')}
+            {select('Perdedor 2', 'loser2', 'Sena')}
           </div>
         </section>
 

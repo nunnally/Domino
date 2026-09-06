@@ -4,6 +4,8 @@ export interface GameDraft {
   playedAt: string
   winnerScore?: number
   loserScore?: number
+  gabuadaIds?: string[]
+  senaIds?: string[]
   latitude?: number
   longitude?: number
 }

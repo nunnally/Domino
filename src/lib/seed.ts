@@ -9,6 +9,7 @@ export const seedPlayers: Player[] = [
   { id: 'gustavo', name: 'Gustavo', photoUrl: 'https://api.dicebear.com/10.x/thumbs/svg?seed=Gustavo', active: true, createdAt },
   { id: 'david', name: 'David', photoUrl: 'https://api.dicebear.com/10.x/thumbs/svg?seed=David', active: true, createdAt },
   { id: 'emanoel', name: 'Emanoel', photoUrl: 'https://api.dicebear.com/10.x/thumbs/svg?seed=Emanoel', active: true, createdAt },
+  { id: 'joice', name: 'Joice', photoUrl: 'https://api.dicebear.com/10.x/thumbs/svg?seed=Joice', active: true, createdAt },
 ]
 
 const seedGame = (
@@ -25,11 +26,13 @@ const seedGame = (
 })
 
 export const seedGames: Game[] = [
-  seedGame('seed-1', '09:00', ['machilas', 'gustavo'], ['david', 'emanoel']),
+  { ...seedGame('seed-1', '09:00', ['machilas', 'gustavo'], ['david', 'emanoel']), senaIds: ['emanoel'] },
   seedGame('seed-2', '09:30', ['cesar', 'vinicius'], ['machilas', 'gustavo']),
-  seedGame('seed-3', '10:00', ['cesar', 'vinicius'], ['david', 'emanoel']),
+  { ...seedGame('seed-3', '10:00', ['cesar', 'vinicius'], ['david', 'emanoel']), senaIds: ['emanoel'] },
   seedGame('seed-4', '10:30', ['cesar', 'vinicius'], ['machilas', 'gustavo']),
-  seedGame('seed-5', '11:00', ['cesar', 'vinicius'], ['david', 'emanoel']),
+  { ...seedGame('seed-5', '11:00', ['cesar', 'vinicius'], ['david', 'emanoel']), senaIds: ['emanoel'] },
   seedGame('seed-6', '11:30', ['machilas', 'gustavo'], ['cesar', 'vinicius']),
-  seedGame('seed-7', '12:00', ['machilas', 'gustavo'], ['emanoel', 'vinicius']),
+  { ...seedGame('seed-7', '12:00', ['machilas', 'gustavo'], ['emanoel', 'vinicius']), senaIds: ['emanoel'] },
+  { ...seedGame('seed-8', '12:30', ['joice', 'cesar'], ['david', 'emanoel']), gabuadaIds: ['joice'] },
+  { ...seedGame('seed-9', '13:00', ['joice', 'vinicius'], ['machilas', 'gustavo']), gabuadaIds: ['joice'] },
 ]

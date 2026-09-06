@@ -51,6 +51,8 @@ export function getIndividualStats(players: Player[], games: Game[]): Individual
       games: 0,
       wins: 0,
       losses: 0,
+      gabuadas: 0,
+      senas: 0,
       winRate: 0,
       maxWinStreak: 0,
       maxLossStreak: 0,
@@ -75,6 +77,14 @@ export function getIndividualStats(players: Player[], games: Game[]): Individual
         stat.losses += 1
         stat.maxLossStreak = Math.max(stat.maxLossStreak, updateStreak(streaks, id, 'loss'))
       }
+    }
+    for (const id of game.gabuadaIds ?? []) {
+      const stat = stats.get(id)
+      if (stat) stat.gabuadas += 1
+    }
+    for (const id of game.senaIds ?? []) {
+      const stat = stats.get(id)
+      if (stat) stat.senas += 1
     }
   }
 

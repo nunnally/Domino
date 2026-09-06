@@ -13,11 +13,11 @@ const extraGame: Game = {
 }
 
 describe('local repository', () => {
-  it('inicializa os seis jogadores e sete partidas', async () => {
+  it('inicializa os jogadores e partidas históricas', async () => {
     const repository = createLocalRepository(createMemoryStorage())
 
-    expect(await repository.listPlayers()).toHaveLength(6)
-    expect(await repository.listGames()).toHaveLength(7)
+    expect(await repository.listPlayers()).toHaveLength(7)
+    expect(await repository.listGames()).toHaveLength(9)
   })
 
   it('mantém a partida salva ao criar outra instância', async () => {

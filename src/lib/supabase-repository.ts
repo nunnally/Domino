@@ -19,6 +19,8 @@ interface GameRow {
   loser_ids: [string, string]
   winner_score: number | null
   loser_score: number | null
+  gabuada_ids: string[] | null
+  sena_ids: string[] | null
   latitude: number | null
   longitude: number | null
   created_at: string
@@ -49,6 +51,8 @@ const toGame = (row: GameRow): Game => ({
   loserIds: row.loser_ids,
   ...(row.winner_score === null ? {} : { winnerScore: row.winner_score }),
   ...(row.loser_score === null ? {} : { loserScore: row.loser_score }),
+  ...(row.gabuada_ids?.length ? { gabuadaIds: row.gabuada_ids } : {}),
+  ...(row.sena_ids?.length ? { senaIds: row.sena_ids } : {}),
   ...(row.latitude === null ? {} : { latitude: row.latitude }),
   ...(row.longitude === null ? {} : { longitude: row.longitude }),
   createdAt: row.created_at,
@@ -61,6 +65,8 @@ const toGameRow = (game: Game): GameRow => ({
   loser_ids: game.loserIds,
   winner_score: game.winnerScore ?? null,
   loser_score: game.loserScore ?? null,
+  gabuada_ids: game.gabuadaIds ?? [],
+  sena_ids: game.senaIds ?? [],
   latitude: game.latitude ?? null,
   longitude: game.longitude ?? null,
   created_at: game.createdAt,

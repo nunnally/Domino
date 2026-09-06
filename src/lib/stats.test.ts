@@ -9,6 +9,20 @@ import {
 } from './stats'
 
 describe('estatísticas das sete partidas iniciais', () => {
+  it('contabiliza gabuadas por jogador e expõe o ranking de gabuadas', () => {
+    const games = [
+      { ...seedGames[0], gabuadaIds: ['cesar'] as string[], senaIds: ['emanoel'] as string[] },
+      { ...seedGames[1], gabuadaIds: ['cesar'] as string[] },
+      { ...seedGames[2], senaIds: ['emanoel'] as string[] },
+    ]
+
+    const cesar = getIndividualStats(seedPlayers, games).find(({ playerId }) => playerId === 'cesar')
+    const emanoel = getIndividualStats(seedPlayers, games).find(({ playerId }) => playerId === 'emanoel')
+
+    expect(cesar).toMatchObject({ gabuadas: 2, senas: 0 })
+    expect(emanoel).toMatchObject({ gabuadas: 0, senas: 2 })
+  })
+
   it('calcula vitórias, derrotas e aproveitamento individual', () => {
     const stats = getIndividualStats(seedPlayers, [...seedGames].reverse())
 
@@ -21,12 +35,13 @@ describe('estatísticas das sete partidas iniciais', () => {
       maxWinStreak,
       maxLossStreak,
     }))).toEqual([
-      { name: 'César', games: 5, wins: 4, losses: 1, winRate: 80, maxWinStreak: 4, maxLossStreak: 1 },
-      { name: 'Vinícius', games: 6, wins: 4, losses: 2, winRate: 66.7, maxWinStreak: 4, maxLossStreak: 2 },
-      { name: 'Gustavo', games: 5, wins: 3, losses: 2, winRate: 60, maxWinStreak: 2, maxLossStreak: 2 },
-      { name: 'Machilas', games: 5, wins: 3, losses: 2, winRate: 60, maxWinStreak: 2, maxLossStreak: 2 },
-      { name: 'David', games: 3, wins: 0, losses: 3, winRate: 0, maxWinStreak: 0, maxLossStreak: 3 },
-      { name: 'Emanoel', games: 4, wins: 0, losses: 4, winRate: 0, maxWinStreak: 0, maxLossStreak: 4 },
+      { name: 'César', games: 6, wins: 5, losses: 1, winRate: 83.3, maxWinStreak: 4, maxLossStreak: 1 },
+      { name: 'Vinícius', games: 7, wins: 5, losses: 2, winRate: 71.4, maxWinStreak: 4, maxLossStreak: 2 },
+      { name: 'Gustavo', games: 6, wins: 3, losses: 3, winRate: 50, maxWinStreak: 2, maxLossStreak: 2 },
+      { name: 'Machilas', games: 6, wins: 3, losses: 3, winRate: 50, maxWinStreak: 2, maxLossStreak: 2 },
+      { name: 'Joice', games: 2, wins: 2, losses: 0, winRate: 100, maxWinStreak: 2, maxLossStreak: 0 },
+      { name: 'David', games: 4, wins: 0, losses: 4, winRate: 0, maxWinStreak: 0, maxLossStreak: 4 },
+      { name: 'Emanoel', games: 5, wins: 0, losses: 5, winRate: 0, maxWinStreak: 0, maxLossStreak: 5 },
     ])
   })
 
@@ -86,8 +101,10 @@ it('leva a frase opcional do jogador para o ranking', () => {
       maxLossStreak,
     }))).toEqual([
       { label: 'César & Vinícius', games: 5, wins: 4, losses: 1, winRate: 80, sampleSize: 'established', maxWinStreak: 4, maxLossStreak: 1 },
-      { label: 'Gustavo & Machilas', games: 5, wins: 3, losses: 2, winRate: 60, sampleSize: 'established', maxWinStreak: 2, maxLossStreak: 2 },
-      { label: 'David & Emanoel', games: 3, wins: 0, losses: 3, winRate: 0, sampleSize: 'established', maxWinStreak: 0, maxLossStreak: 3 },
+      { label: 'Gustavo & Machilas', games: 6, wins: 3, losses: 3, winRate: 50, sampleSize: 'established', maxWinStreak: 2, maxLossStreak: 2 },
+      { label: 'César & Joice', games: 1, wins: 1, losses: 0, winRate: 100, sampleSize: 'small', maxWinStreak: 1, maxLossStreak: 0 },
+      { label: 'Joice & Vinícius', games: 1, wins: 1, losses: 0, winRate: 100, sampleSize: 'small', maxWinStreak: 1, maxLossStreak: 0 },
+      { label: 'David & Emanoel', games: 4, wins: 0, losses: 4, winRate: 0, sampleSize: 'established', maxWinStreak: 0, maxLossStreak: 4 },
       { label: 'Emanoel & Vinícius', games: 1, wins: 0, losses: 1, winRate: 0, sampleSize: 'small', maxWinStreak: 0, maxLossStreak: 1 },
     ])
   })

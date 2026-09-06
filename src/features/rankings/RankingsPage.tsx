@@ -83,6 +83,10 @@ export function RankingsPage({ players, games }: RankingsPageProps) {
 
   const pairLossRecord = Math.max(0, ...pairs.map((row) => row.maxLossStreak));
 
+  const gabuadaRanking = [...individual].sort(
+    (a, b) => b.gabuadas - a.gabuadas || b.wins - a.wins || a.name.localeCompare(b.name, 'pt-BR'),
+  )
+
   return (
     <section className="page-wrap inner-page">
       <header className="inner-page-heading">
@@ -187,6 +191,28 @@ export function RankingsPage({ players, games }: RankingsPageProps) {
 
               <b>{individualLossRecord || "—"}</b>
             </article>
+          </section>
+
+          <section className="panel gabuada-ranking" aria-label="Ranking de gabuadas">
+            <div className="gabuada-heading">
+              <div>
+                <span className="sticker sticker-yellow">Ranking especial</span>
+                <h2>Gabuadas</h2>
+              </div>
+              <p>Quem mais fechou a rodada sem deixar respirar.</p>
+            </div>
+            <div className="gabuada-list" role="table" aria-label="Ranking de gabuadas">
+              {gabuadaRanking.map((row, index) => (
+                <div className="gabuada-row" role="row" key={row.playerId}>
+                  <strong>{String(index + 1).padStart(2, '0')}</strong>
+                  <span className="gabuada-player">
+                    <PlayerAvatar name={row.name} photoUrl={row.photoUrl} mood={getMoodForPosition(index, gabuadaRanking.length)} />
+                    <span>{row.name}</span>
+                  </span>
+                  <strong className="gabuada-count">{row.gabuadas}</strong>
+                </div>
+              ))}
+            </div>
           </section>
         </div>
       ) : (
