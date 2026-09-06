@@ -117,17 +117,17 @@ describe('GameForm', () => {
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce())
   })
 
-  it('mostra o erro quando um jogador aparece nas duas duplas', async () => {
+  it('não oferece um jogador já selecionado nos outros seletores', async () => {
     const user = userEvent.setup()
     render(<GameForm players={seedPlayers} onSave={() => {}} onCancel={() => {}} />)
 
     await user.selectOptions(screen.getByLabelText('Vencedor 1'), 'cesar')
-    await user.selectOptions(screen.getByLabelText('Vencedor 2'), 'vinicius')
-    await user.selectOptions(screen.getByLabelText('Perdedor 1'), 'cesar')
-    await user.selectOptions(screen.getByLabelText('Perdedor 2'), 'emanoel')
-    await user.click(screen.getByRole('button', { name: /salvar partida/i }))
+    expect(within(screen.getByLabelText('Vencedor 2')).queryByRole('option', { name: 'César' })).not.toBeInTheDocument()
+    expect(within(screen.getByLabelText('Perdedor 1')).queryByRole('option', { name: 'César' })).not.toBeInTheDocument()
 
-    expect(screen.getByRole('alert')).toHaveTextContent('Escolha quatro jogadores diferentes.')
+    await user.click(screen.getByRole('button', { name: /vencedor 2: escolher jogador/i }))
+    const menu = screen.getByRole('listbox', { name: /opções de vencedor 2/i })
+    expect(within(menu).queryByRole('option', { name: /césar/i })).not.toBeInTheDocument()
   })
 
   it('mostra o erro quando a data é apagada', async () => {

@@ -97,6 +97,8 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
 
   const select = (label: string, slot: Slot, bonusLabels: Array<'Gabuada' | 'Sena'>) => {
     const selected = activePlayers.find((player) => player.id === slots[slot])
+    const selectedIds = new Set(Object.values(slots).filter(Boolean))
+    const selectablePlayers = activePlayers.filter((player) => player.id === slots[slot] || !selectedIds.has(player.id))
 
     return (
       <div className="player-select">
@@ -116,7 +118,7 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
           </button>
           <select className="player-picker-native" value={slots[slot]} onChange={(event) => choosePlayer(slot, event.target.value)} aria-label={label} tabIndex={-1}>
             <option value="">Escolher jogador</option>
-            {activePlayers.map((player) => <option value={player.id} key={player.id}>{player.name}</option>)}
+            {selectablePlayers.map((player) => <option value={player.id} key={player.id}>{player.name}</option>)}
           </select>
           {openSlot === slot && (
             <div className="player-picker-menu" role="listbox" aria-label={`Opções de ${label}`}>
@@ -124,7 +126,7 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
                 <span className="player-picker-placeholder">—</span>
                 <span>Escolher jogador</span>
               </button>
-              {activePlayers.map((player) => (
+              {selectablePlayers.map((player) => (
                 <button className="player-picker-option" type="button" role="option" aria-selected={player.id === selected?.id} key={player.id} onClick={() => choosePlayer(slot, player.id)}>
                   <PlayerAvatar name={player.name} photoUrl={player.photoUrl} mood="serious" />
                   <span>{player.name}</span>
@@ -133,21 +135,25 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
             </div>
           )}
         </div>
-        {selected && bonusLabels.map((bonusLabel) => {
-          const bonus = bonusLabel.toLowerCase() as 'gabuada' | 'sena'
-          const checked = bonus === 'gabuada' ? gabuadaSlot === slot : senaSlot === slot
-          return (
-            <label className="bonus-toggle" key={bonusLabel}>
-              <input
-                type="checkbox"
-                checked={checked}
-                onChange={(event) => updateBonus(slot, bonus, event.target.checked)}
-                aria-label={`${bonusLabel} — ${selected.name}`}
-              />
-              <span>{bonusLabel}</span>
-            </label>
-          )
-        })}
+        {selected && (
+          <div className="bonus-toggles">
+            {bonusLabels.map((bonusLabel) => {
+              const bonus = bonusLabel.toLowerCase() as 'gabuada' | 'sena'
+              const checked = bonus === 'gabuada' ? gabuadaSlot === slot : senaSlot === slot
+              return (
+                <label className="bonus-toggle" key={bonusLabel}>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={(event) => updateBonus(slot, bonus, event.target.checked)}
+                    aria-label={`${bonusLabel} — ${selected.name}`}
+                  />
+                  <span>{bonusLabel}</span>
+                </label>
+              )
+            })}
+          </div>
+        )}
       </div>
     )
   }

@@ -1390,6 +1390,10 @@ input:focus-visible {
 .player-picker-trigger svg {
   flex: 0 0 auto;
 }
+.player-picker-trigger:focus,
+.player-picker-trigger:focus-visible {
+  outline: none;
+}
 .player-picker-native {
   position: absolute;
   width: 1px !important;
@@ -1462,6 +1466,12 @@ input:focus-visible {
   font-weight: 700;
   text-transform: uppercase;
   cursor: pointer;
+}
+.bonus-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
 }
 .bonus-toggle input {
   width: 18px;
