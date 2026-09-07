@@ -31,20 +31,24 @@ function getMoodForPosition(index: number, total: number): AvatarMood {
   return "serious";
 }
 
-function recordNames<
-  T extends {
-    label?: string;
-    name?: string;
-  },
->(rows: T[], record: number) {
-  if (record <= 0) {
-    return "Sem partidas ainda";
+function getStreakLeaders<T>(
+  rows: T[],
+  getValue: (row: T) => number,
+  getName: (row: T) => string,
+) {
+  const values = [...new Set(rows.map(getValue).filter((value) => value > 0))]
+    .sort((a, b) => b - a)
+    .slice(0, 2)
+
+  if (values.length === 0) {
+    return [{ rank: 1, names: "Sem partidas ainda", value: 0 }]
   }
 
-  return rows
-    .map((row) => row.label ?? row.name ?? "")
-    .filter(Boolean)
-    .join(" · ");
+  return values.map((value, index) => ({
+    rank: index + 1,
+    names: rows.filter((row) => getValue(row) === value).map(getName).join(" · "),
+    value,
+  }))
 }
 
 export function RankingsPage({ players, games }: RankingsPageProps) {
@@ -69,21 +73,12 @@ export function RankingsPage({ players, games }: RankingsPageProps) {
     .filter((pair) => pair.sampleSize === "established")
     .sort((a, b) => a.winRate - b.winRate || b.losses - a.losses)[0];
 
-  const individualWinRecord = Math.max(
-    0,
-    ...individual.map((row) => row.maxWinStreak),
-  );
+  const individualWinLeaders = getStreakLeaders(individual, (row) => row.maxWinStreak, (row) => row.name)
+  const individualLossLeaders = getStreakLeaders(individual, (row) => row.maxLossStreak, (row) => row.name)
+  const pairWinLeaders = getStreakLeaders(pairs, (row) => row.maxWinStreak, (row) => row.label)
+  const pairLossLeaders = getStreakLeaders(pairs, (row) => row.maxLossStreak, (row) => row.label)
 
-  const individualLossRecord = Math.max(
-    0,
-    ...individual.map((row) => row.maxLossStreak),
-  );
-
-  const pairWinRecord = Math.max(0, ...pairs.map((row) => row.maxWinStreak));
-
-  const pairLossRecord = Math.max(0, ...pairs.map((row) => row.maxLossStreak));
-
-  const gabuadaRanking = [...individual].sort(
+  const gabuadaRanking = individual.filter((row) => row.gabuadas > 0).sort(
     (a, b) => b.gabuadas - a.gabuadas || b.wins - a.wins || a.name.localeCompare(b.name, 'pt-BR'),
   )
 
@@ -155,41 +150,29 @@ export function RankingsPage({ players, games }: RankingsPageProps) {
 
           <section className="streak-records" aria-label="Recordes individuais">
             <article className="streak-record win-record">
-              <Flame size={25} />
-
-              <span>
-                <small>Maior sequência de vitórias</small>
-
-                <strong>
-                  {recordNames(
-                    individual.filter(
-                      (row) => row.maxWinStreak === individualWinRecord,
-                    ),
-                    individualWinRecord,
-                  )}
-                </strong>
-              </span>
-
-              <b>{individualWinRecord || "—"}</b>
+              <div className="streak-record-title"><Flame size={22} /><small>Maior sequência de vitórias</small></div>
+              <div className="streak-leaders">
+                {individualWinLeaders.map((leader) => (
+                  <div className="streak-leader" key={`${leader.rank}-${leader.names}`}>
+                    <span className="streak-rank">{leader.rank}º</span>
+                    <strong>{leader.names}</strong>
+                    <b>{leader.value || "—"}</b>
+                  </div>
+                ))}
+              </div>
             </article>
 
             <article className="streak-record loss-record">
-              <Trash2 size={25} />
-
-              <span>
-                <small>Maior sequência de derrotas</small>
-
-                <strong>
-                  {recordNames(
-                    individual.filter(
-                      (row) => row.maxLossStreak === individualLossRecord,
-                    ),
-                    individualLossRecord,
-                  )}
-                </strong>
-              </span>
-
-              <b>{individualLossRecord || "—"}</b>
+              <div className="streak-record-title"><Trash2 size={22} /><small>Maior sequência de derrotas</small></div>
+              <div className="streak-leaders">
+                {individualLossLeaders.map((leader) => (
+                  <div className="streak-leader" key={`${leader.rank}-${leader.names}`}>
+                    <span className="streak-rank">{leader.rank}º</span>
+                    <strong>{leader.names}</strong>
+                    <b>{leader.value || "—"}</b>
+                  </div>
+                ))}
+              </div>
             </article>
           </section>
 
@@ -202,16 +185,16 @@ export function RankingsPage({ players, games }: RankingsPageProps) {
               <p>Quem mais fechou a rodada sem deixar respirar.</p>
             </div>
             <div className="gabuada-list" role="table" aria-label="Ranking de gabuadas">
-              {gabuadaRanking.map((row, index) => (
-                <div className="gabuada-row" role="row" key={row.playerId}>
-                  <strong>{String(index + 1).padStart(2, '0')}</strong>
-                  <span className="gabuada-player">
-                    <PlayerAvatar name={row.name} photoUrl={row.photoUrl} mood={getMoodForPosition(index, gabuadaRanking.length)} />
-                    <span>{row.name}</span>
-                  </span>
-                  <strong className="gabuada-count">{row.gabuadas}</strong>
-                </div>
-              ))}
+              {gabuadaRanking.length > 0 ? gabuadaRanking.map((row, index) => (
+                  <div className="gabuada-row" role="row" key={row.playerId}>
+                    <strong>{String(index + 1).padStart(2, '0')}</strong>
+                    <span className="gabuada-player">
+                      <PlayerAvatar name={row.name} photoUrl={row.photoUrl} mood={getMoodForPosition(index, gabuadaRanking.length)} />
+                      <span>{row.name}</span>
+                    </span>
+                    <strong className="gabuada-count">{row.gabuadas}</strong>
+                  </div>
+                )) : <p className="gabuada-empty">Ainda sem gabuadas</p>}
             </div>
           </section>
         </div>
@@ -305,37 +288,29 @@ export function RankingsPage({ players, games }: RankingsPageProps) {
 
           <section className="streak-records" aria-label="Recordes de duplas">
             <article className="streak-record win-record">
-              <Flame size={25} />
-
-              <span>
-                <small>Maior sequência de vitórias</small>
-
-                <strong>
-                  {recordNames(
-                    pairs.filter((row) => row.maxWinStreak === pairWinRecord),
-                    pairWinRecord,
-                  )}
-                </strong>
-              </span>
-
-              <b>{pairWinRecord || "—"}</b>
+              <div className="streak-record-title"><Flame size={22} /><small>Maior sequência de vitórias</small></div>
+              <div className="streak-leaders">
+                {pairWinLeaders.map((leader) => (
+                  <div className="streak-leader" key={`${leader.rank}-${leader.names}`}>
+                    <span className="streak-rank">{leader.rank}º</span>
+                    <strong>{leader.names}</strong>
+                    <b>{leader.value || "—"}</b>
+                  </div>
+                ))}
+              </div>
             </article>
 
             <article className="streak-record loss-record">
-              <Trash2 size={25} />
-
-              <span>
-                <small>Maior sequência de derrotas</small>
-
-                <strong>
-                  {recordNames(
-                    pairs.filter((row) => row.maxLossStreak === pairLossRecord),
-                    pairLossRecord,
-                  )}
-                </strong>
-              </span>
-
-              <b>{pairLossRecord || "—"}</b>
+              <div className="streak-record-title"><Trash2 size={22} /><small>Maior sequência de derrotas</small></div>
+              <div className="streak-leaders">
+                {pairLossLeaders.map((leader) => (
+                  <div className="streak-leader" key={`${leader.rank}-${leader.names}`}>
+                    <span className="streak-rank">{leader.rank}º</span>
+                    <strong>{leader.names}</strong>
+                    <b>{leader.value || "—"}</b>
+                  </div>
+                ))}
+              </div>
             </article>
           </section>
 

@@ -1693,11 +1693,9 @@ input:focus-visible {
 }
 .streak-record {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 14px;
-  min-height: 96px;
-  padding: 18px 20px;
+  gap: 12px;
+  min-height: 150px;
+  padding: 16px 18px;
   border: 3px solid var(--ink);
   box-shadow: var(--shadow-click);
 }
@@ -1707,24 +1705,44 @@ input:focus-visible {
 .streak-record.loss-record {
   background: var(--red);
 }
-.streak-record > span {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
+.streak-record-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
-.streak-record small {
+.streak-record-title small {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }
-.streak-record strong {
-  overflow-wrap: anywhere;
-  font-size: 18px;
+.streak-leaders {
+  display: grid;
+  gap: 6px;
 }
-.streak-record b {
-  font-size: 42px;
+.streak-leader {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  min-height: 40px;
+  padding: 5px 8px;
+  border: 2px solid var(--ink);
+  background: rgb(255 255 255 / 45%);
+}
+.streak-rank {
+  font-size: 19px;
+  font-weight: 700;
+}
+.streak-leader strong {
+  overflow-wrap: anywhere;
+  font-size: 16px;
+}
+.streak-leader b {
+  min-width: 28px;
+  font-size: 25px;
   line-height: 1;
+  text-align: right;
 }
 .streak-cell {
   display: flex;
@@ -1762,6 +1780,10 @@ input:focus-visible {
 }
 .gabuada-list {
   display: grid;
+}
+.gabuada-empty {
+  margin: 18px 0 2px;
+  font-weight: 700;
 }
 .gabuada-row {
   display: grid;
@@ -2809,8 +2831,8 @@ input:focus-visible {
     min-height: 82px;
     padding: 14px 16px;
   }
-  .streak-record b {
-    font-size: 34px;
+  .streak-leader b {
+    font-size: 28px;
   }
   .gabuada-ranking {
     margin-top: 22px;
