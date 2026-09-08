@@ -1227,6 +1227,195 @@ input:focus-visible {
 .mobile-nav {
   display: none;
 }
+.house-rules-page {
+  padding-bottom: 120px;
+}
+.house-rules-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 34px;
+  margin: 46px 0 34px;
+}
+.house-rules-hero h1 {
+  max-width: 760px;
+  margin: 8px 0 14px;
+  font-size: clamp(42px, 7vw, 78px);
+  line-height: .92;
+  letter-spacing: -.04em;
+}
+.house-rules-hero p:last-child {
+  max-width: 650px;
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.4;
+}
+.tribunal-seal {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-width: 168px;
+  padding: 18px 16px;
+  border: 3px solid var(--ink);
+  background: var(--violet);
+  box-shadow: var(--shadow-click);
+  transform: rotate(3deg);
+}
+.tribunal-seal strong {
+  font-size: 37px;
+  line-height: 1;
+}
+.tribunal-seal span {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-align: center;
+}
+.house-rules-manifesto {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+  min-height: 190px;
+  padding: 28px 34px;
+  border: 4px solid var(--ink);
+  background: var(--red);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.house-rules-manifesto-copy {
+  position: relative;
+  z-index: 1;
+}
+.house-rules-manifesto h2 {
+  max-width: 680px;
+  margin: 15px 0 8px;
+  font-size: clamp(28px, 4vw, 45px);
+  line-height: .98;
+  letter-spacing: -.03em;
+}
+.house-rules-manifesto p {
+  max-width: 650px;
+  margin: 0;
+  font-weight: 600;
+}
+.house-rules-manifesto .domino-tile {
+  transform: rotate(-8deg);
+}
+.house-rules-section,
+.ministers-section,
+.precedents-section {
+  margin-top: 66px;
+}
+.house-rules-section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+.section-kicker {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.house-rules-section-heading h2 {
+  margin: 0;
+  font-size: 34px;
+  line-height: 1;
+  letter-spacing: -.03em;
+}
+.house-rules-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 3px solid var(--ink);
+}
+.house-rules-list li {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  padding: 18px 0;
+  border-bottom: 2px solid var(--ink);
+}
+.house-rule-number {
+  font-size: 25px;
+  font-weight: 700;
+  color: var(--red);
+  -webkit-text-stroke: 1px var(--ink);
+}
+.house-rules-list h3 {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+.house-rules-list p {
+  margin: 0;
+  max-width: 720px;
+}
+.ministers-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+.minister-card {
+  display: grid;
+  align-content: start;
+  gap: 13px;
+  min-height: 220px;
+  padding: 16px;
+  border: 3px solid var(--ink);
+  background: var(--surface);
+  box-shadow: 5px 5px 0 var(--ink);
+}
+.minister-card:nth-child(1) { background: var(--yellow); }
+.minister-card:nth-child(3) { background: var(--red); }
+.minister-card:nth-child(5) { background: var(--violet); }
+.minister-card .player-avatar {
+  width: 58px;
+  height: 58px;
+  border-width: 3px;
+}
+.minister-card h3 {
+  margin: 0 0 3px;
+  font-size: 20px;
+  line-height: 1;
+}
+.minister-card span {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.minister-card p {
+  margin: 14px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.precedents-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.precedents-list article {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 12px;
+  align-content: start;
+  padding: 18px;
+  border: 3px solid var(--ink);
+  background: var(--surface);
+}
+.precedents-list article:nth-child(2) { background: var(--yellow); }
+.precedents-list article:nth-child(3) { background: var(--violet); }
+.precedents-list h3 { margin: 0; font-size: 18px; }
+.precedents-list p { grid-column: 1 / -1; margin: 4px 0 0; font-size: 14px; }
 .loading-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -2583,6 +2772,75 @@ input:focus-visible {
   .topbar {
     width: min(100% - 24px, var(--max-width));
   }
+  .house-rules-page {
+    padding-bottom: 108px;
+  }
+  .house-rules-hero {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 24px;
+    margin-top: 34px;
+  }
+  .house-rules-hero h1 {
+    font-size: clamp(40px, 13vw, 62px);
+  }
+  .house-rules-hero p:last-child {
+    font-size: 16px;
+  }
+  .tribunal-seal {
+    justify-self: start;
+  }
+  .house-rules-manifesto {
+    grid-template-columns: 1fr;
+    padding: 24px 20px 30px;
+  }
+  .house-rules-manifesto .domino-tile {
+    justify-self: end;
+    margin: -4px 6px -18px 0;
+  }
+  .house-rules-section,
+  .ministers-section,
+  .precedents-section {
+    margin-top: 50px;
+  }
+  .house-rules-section-heading {
+    display: grid;
+    align-items: start;
+    gap: 8px;
+  }
+  .house-rules-section-heading h2 {
+    font-size: 29px;
+  }
+  .house-rules-list li {
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 10px;
+    padding: 16px 0;
+  }
+  .house-rule-number {
+    font-size: 21px;
+  }
+  .house-rules-list h3 {
+    font-size: 18px;
+  }
+  .house-rules-list p {
+    font-size: 14px;
+  }
+  .ministers-grid,
+  .precedents-list {
+    grid-template-columns: 1fr;
+  }
+  .minister-card {
+    grid-template-columns: auto 1fr;
+    min-height: 0;
+    align-items: start;
+    gap: 13px;
+  }
+  .minister-card > div {
+    min-width: 0;
+  }
+  .minister-card p {
+    margin-top: 10px;
+  }
   .topbar {
     min-height: 78px;
     margin-top: 10px;
@@ -2762,7 +3020,7 @@ input:focus-visible {
     right: 0;
     bottom: 0;
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(7, 1fr);
     min-height: 72px;
     border-top: 3px solid var(--ink);
     background: var(--surface);
@@ -2778,7 +3036,7 @@ input:focus-visible {
     border: 0;
     border-right: 1px solid var(--ink);
     background: var(--surface);
-    font-size: 9px;
+    font-size: 8px;
     font-weight: 700;
     cursor: pointer;
   }

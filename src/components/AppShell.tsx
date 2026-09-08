@@ -1,9 +1,9 @@
-import { Crown, History, Home, Plus, Swords, UserRound } from 'lucide-react'
+import { Crown, Gavel, History, Home, Plus, Swords, UserRound } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { DominoTile } from './DominoTile'
 
-export type PageId = 'home' | 'rankings' | 'rivalries' | 'players' | 'history' | 'new-game'
+export type PageId = 'home' | 'rankings' | 'rivalries' | 'players' | 'history' | 'regimento' | 'new-game'
 
 interface AppShellProps {
   activePage: PageId
@@ -17,6 +17,7 @@ const navItems: Array<{ id: PageId; label: string; mobileLabel: string; icon: ty
   { id: 'rivalries', label: 'Confrontos', mobileLabel: 'Duelos', icon: Swords },
   { id: 'players', label: 'Jogadores', mobileLabel: 'Jogadores', icon: UserRound },
   { id: 'history', label: 'Histórico', mobileLabel: 'Histórico', icon: History },
+  { id: 'regimento', label: 'Regimento', mobileLabel: 'STD', icon: Gavel },
 ]
 
 export function AppShell({ activePage, onNavigate, children }: AppShellProps) {

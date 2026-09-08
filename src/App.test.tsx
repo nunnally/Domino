@@ -42,4 +42,20 @@ describe("dashboard", () => {
 
     window.location.hash = "";
   });
+
+  it("abre o regimento da casa pela rota", async () => {
+    window.location.hash = "regimento";
+
+    render(<App repository={createLocalRepository(createMemoryStorage())} />);
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: /superior tribunal do dominó/i,
+      }),
+    ).toBeInTheDocument();
+
+    expect(screen.getByRole("button", { name: "Regimento" })).toBeInTheDocument();
+    window.location.hash = "";
+  });
 });

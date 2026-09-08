@@ -11,6 +11,7 @@ import { RankingsPage } from "./features/rankings/RankingsPage";
 
 import { HistoryPage } from "./features/history/HistoryPage";
 import { PlayersPage } from "./features/players/PlayersPage";
+import { HouseRulesPage } from "./features/regimento/HouseRulesPage";
 
 import { createRepository, type DominoRepository } from "./lib/repository";
 
@@ -27,6 +28,7 @@ const pageIds: PageId[] = [
   "players",
   "history",
   "new-game",
+  "regimento",
 ];
 
 const pageFromHash = (): PageId => {
@@ -266,6 +268,10 @@ const updatePlayer = async (
 
       {!loading && !error && page === "history" && (
         <HistoryPage players={players} games={games} />
+      )}
+
+      {!loading && !error && page === "regimento" && (
+        <HouseRulesPage players={players} />
       )}
     </AppShell>
   );
