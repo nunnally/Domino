@@ -20,7 +20,7 @@ function getMoodForPosition(index: number, total: number): AvatarMood {
     return "champion";
   }
 
-  if (total > 1 && index === total - 1) {
+  if (total > 1 && index === total - 2) {
     return "sad";
   }
 

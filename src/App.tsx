@@ -178,18 +178,20 @@ const addPlayer = async (
   await loadData(repository);
 };
 
-  const updatePlayer = async (
-    player: Player,
-    changes: Partial<Pick<Player, "active" | "catchphrase">>,
-  ) => {
-    if (!repository) {
-      throw new Error("Repositório indisponível");
-    }
+const updatePlayer = async (
+  player: Player,
+  changes: Partial<
+    Pick<Player, "name" | "photoUrl" | "catchphrase" | "active">
+  >,
+) => {
+  if (!repository) {
+    throw new Error("Repositório indisponível");
+  }
 
-    await repository.updatePlayer(player.id, changes);
+  await repository.updatePlayer(player.id, changes);
 
-    await loadData(repository);
-  };
+  await loadData(repository);
+};
 
   return (
     <AppShell activePage={page} onNavigate={navigate}>
