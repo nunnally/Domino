@@ -3777,7 +3777,6 @@ input:focus-visible {
   flex: 0 0 auto;
   border: 3px solid var(--ink);
   border-radius: 50%;
-  background-image: url("/assets/ministros-std.jpeg");
   background-repeat: no-repeat;
   background-size: 700% auto;
   background-color: var(--surface);

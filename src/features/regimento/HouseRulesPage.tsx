@@ -2,6 +2,8 @@ import { Gavel, Scale, ScrollText, ShieldCheck } from 'lucide-react'
 
 import { DominoTile } from '../../components/DominoTile'
 
+const ministersPhoto = `${import.meta.env.BASE_URL}assets/ministros-std.jpeg`
+
 const ministers = [
   {
     id: 'cesar',
@@ -91,9 +93,13 @@ export function HouseRulesPage() {
     <section className="page-wrap inner-page house-rules-page">
       <header className="house-rules-hero">
         <div>
-          <p className="eyebrow">Regimento oficial da mesa</p>
+          <p className="eyebrow">
+            Regimento oficial da mesa
+          </p>
 
-          <h1>Superior Tribunal do Dominó</h1>
+          <h1>
+            Superior Tribunal do Dominó
+          </h1>
 
           <p>
             O STD julga as grandes questões da rodada: quem bateu, quem levou e
@@ -107,38 +113,54 @@ export function HouseRulesPage() {
         >
           <Scale size={38} strokeWidth={2.5} />
 
-          <strong>STD</strong>
+          <strong>
+            STD
+          </strong>
 
-          <span>Casa de leis da mesa</span>
+          <span>
+            Casa de leis da mesa
+          </span>
         </div>
       </header>
 
       <figure className="tribunal-official-photo">
         <div className="tribunal-photo-heading">
           <div>
-            <span className="section-kicker">Composição oficial</span>
+            <span className="section-kicker">
+              Composição oficial
+            </span>
 
-            <strong>Plenário do STD</strong>
+            <strong>
+              Plenário do STD
+            </strong>
           </div>
 
-          <span className="tribunal-photo-stamp">Registro oficial</span>
+          <span className="tribunal-photo-stamp">
+            Registro oficial
+          </span>
         </div>
 
         <div className="tribunal-photo-frame">
           <img
-            src="/assets/ministros-std.jpeg"
+            src={ministersPhoto}
             alt="Vinícius, Emanoel, César, David e Machilas reunidos no Superior Tribunal do Dominó"
           />
         </div>
 
         <figcaption className="tribunal-photo-caption">
           <div>
-            <strong>Superior Tribunal do Dominó</strong>
+            <strong>
+              Superior Tribunal do Dominó
+            </strong>
 
-            <span>Sessão solene da composição atual</span>
+            <span>
+              Sessão solene da composição atual
+            </span>
           </div>
 
-          <p>Vinícius • Emanoel • César • David • Machilas</p>
+          <p>
+            Vinícius • Emanoel • César • David • Machilas
+          </p>
         </figcaption>
       </figure>
 
@@ -160,7 +182,11 @@ export function HouseRulesPage() {
           </p>
         </div>
 
-        <DominoTile left={5} right={2} label="Peça cinco dois" />
+        <DominoTile
+          left={5}
+          right={2}
+          label="Peça cinco dois"
+        />
       </section>
 
       <section
@@ -185,9 +211,13 @@ export function HouseRulesPage() {
               </span>
 
               <div>
-                <h3>{rule.title}</h3>
+                <h3>
+                  {rule.title}
+                </h3>
 
-                <p>{rule.text}</p>
+                <p>
+                  {rule.text}
+                </p>
               </div>
             </li>
           ))}
@@ -203,7 +233,9 @@ export function HouseRulesPage() {
             Composição atual
           </span>
 
-          <h2>Ministros em exercício</h2>
+          <h2>
+            Ministros em exercício
+          </h2>
         </div>
 
         <div className="ministers-grid">
@@ -217,16 +249,23 @@ export function HouseRulesPage() {
                 role="img"
                 aria-label={`Foto de ${minister.name}`}
                 style={{
+                  backgroundImage: `url(${ministersPhoto})`,
                   backgroundPosition: minister.crop,
                 }}
               />
 
               <div className="minister-card-copy">
-                <h3>{minister.name}</h3>
+                <h3>
+                  {minister.name}
+                </h3>
 
-                <span>{minister.role}</span>
+                <span>
+                  {minister.role}
+                </span>
 
-                <p>“{minister.note}”</p>
+                <p>
+                  “{minister.note}”
+                </p>
               </div>
             </article>
           ))}
@@ -252,9 +291,13 @@ export function HouseRulesPage() {
             <article key={title}>
               <Icon size={25} />
 
-              <h3>{title}</h3>
+              <h3>
+                {title}
+              </h3>
 
-              <p>{text}</p>
+              <p>
+                {text}
+              </p>
             </article>
           ))}
         </div>
