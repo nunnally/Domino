@@ -1,5 +1,12 @@
 import { useState, type FormEvent } from "react";
-import { Check, Pencil, Plus, UserRoundCheck, UserRoundX } from "lucide-react";
+import {
+  Check,
+  Pencil,
+  Plus,
+  UserRoundCheck,
+  UserRoundX,
+  X,
+} from "lucide-react";
 
 import { DominoTile } from "../../components/DominoTile";
 import { PlayerAvatar } from "../../components/PlayerAvatar";
@@ -31,18 +38,15 @@ export function PlayersPage({
 }: PlayersPageProps) {
   const [showForm, setShowForm] = useState(false);
 
-  // Novo jogador
   const [name, setName] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
   const [catchphrase, setCatchphrase] = useState("");
 
-  // Edição de perfil
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
 
   const [nameDraft, setNameDraft] = useState("");
   const [photoDraft, setPhotoDraft] = useState("");
 
-  // Edição de frase
   const [editingPhraseId, setEditingPhraseId] = useState<string | null>(null);
 
   const [phraseDraft, setPhraseDraft] = useState("");
@@ -94,7 +98,6 @@ export function PlayersPage({
   };
 
   const startPlayerEdit = (player: Player) => {
-    // Fecha o editor de frase caso esteja aberto
     setEditingPhraseId(null);
 
     setEditingPlayerId(player.id);
@@ -148,7 +151,6 @@ export function PlayersPage({
   };
 
   const startPhraseEdit = (player: Player) => {
-    // Fecha o editor de perfil caso esteja aberto
     setEditingPlayerId(null);
 
     setEditingPhraseId(player.id);
@@ -175,6 +177,10 @@ export function PlayersPage({
       setSaving(false);
     }
   };
+
+  const editingPlayer = editingPlayerId
+    ? (players.find((player) => player.id === editingPlayerId) ?? null)
+    : null;
 
   return (
     <section className="page-wrap inner-page">
@@ -290,61 +296,83 @@ export function PlayersPage({
               </span>
 
               {editingProfile ? (
-                <div className="player-profile-editor">
-                  <PlayerAvatar
-                    name={nameDraft || player.name}
-                    photoUrl={photoDraft || player.photoUrl}
-                    className="player-card-avatar"
-                  />
-
-                  <label>
-                    <span>Nome</span>
-
-                    <input
-                      value={nameDraft}
-                      onChange={(event) => setNameDraft(event.target.value)}
-                      maxLength={60}
-                      autoFocus
+                <>
+                  <div className="player-profile-editor desktop-profile-editor">
+                    <PlayerAvatar
+                      name={nameDraft || player.name}
+                      photoUrl={photoDraft || player.photoUrl}
+                      className="player-card-avatar"
                     />
-                  </label>
 
-                  <label>
-                    <span>URL da foto</span>
+                    <label>
+                      <span>Nome</span>
 
-                    <input
-                      type="url"
-                      value={photoDraft}
-                      onChange={(event) => setPhotoDraft(event.target.value)}
-                      placeholder="https://..."
-                    />
-                  </label>
+                      <input
+                        value={nameDraft}
+                        onChange={(event) => setNameDraft(event.target.value)}
+                        maxLength={60}
+                        autoFocus
+                      />
+                    </label>
 
-                  <small>
-                    Se deixar a foto vazia, será criado um avatar automático.
-                  </small>
+                    <label>
+                      <span>URL da foto</span>
 
-                  <div className="player-profile-actions">
-                    <button
-                      className="button button-secondary"
-                      type="button"
-                      disabled={saving}
-                      onClick={() => void savePlayer(player)}
-                    >
-                      <Check size={17} />
+                      <input
+                        type="url"
+                        value={photoDraft}
+                        onChange={(event) => setPhotoDraft(event.target.value)}
+                        placeholder="https://..."
+                      />
+                    </label>
 
-                      {saving ? "Salvando..." : "Salvar"}
-                    </button>
+                    <small>
+                      Se deixar a foto vazia, será criado um avatar automático.
+                    </small>
 
-                    <button
-                      className="button"
-                      type="button"
-                      disabled={saving}
-                      onClick={cancelPlayerEdit}
-                    >
-                      Cancelar
-                    </button>
+                    <div className="player-profile-actions">
+                      <button
+                        className="button button-secondary"
+                        type="button"
+                        disabled={saving}
+                        onClick={() => void savePlayer(player)}
+                      >
+                        <Check size={17} />
+
+                        {saving ? "Salvando..." : "Salvar"}
+                      </button>
+
+                      <button
+                        className="button"
+                        type="button"
+                        disabled={saving}
+                        onClick={cancelPlayerEdit}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
                   </div>
-                </div>
+
+                  <div className="mobile-edit-preview" aria-hidden="true">
+                    <PlayerAvatar
+                      name={nameDraft || player.name}
+                      photoUrl={photoDraft || player.photoUrl}
+                      className="player-card-avatar"
+                    />
+
+                    <h2>{nameDraft || player.name}</h2>
+
+                    <p
+                      className={player.catchphrase ? "player-catchphrase" : ""}
+                    >
+                      {player.catchphrase
+                        ? `“${player.catchphrase}”`
+                        : player.active
+                          ? "Na ativa"
+                          : "Fora da mesa"}
+                    </p>
+                  </div>
+                </>
               ) : (
                 <>
                   <PlayerAvatar
@@ -432,6 +460,106 @@ export function PlayersPage({
           );
         })}
       </div>
+
+      {editingPlayer && (
+        <>
+          <button
+            className="mobile-profile-backdrop"
+            type="button"
+            aria-label="Fechar edição de perfil"
+            onClick={cancelPlayerEdit}
+          />
+
+          <aside
+            className="mobile-profile-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mobile-profile-sheet-title"
+          >
+            <span className="mobile-profile-sheet-handle" aria-hidden="true" />
+
+            <header className="mobile-profile-sheet-header">
+              <PlayerAvatar
+                name={nameDraft || editingPlayer.name}
+                photoUrl={photoDraft || editingPlayer.photoUrl}
+                className="mobile-profile-sheet-avatar"
+              />
+
+              <div>
+                <span>Editar jogador</span>
+                <h2 id="mobile-profile-sheet-title">
+                  {nameDraft || editingPlayer.name}
+                </h2>
+              </div>
+
+              <button
+                className="mobile-profile-sheet-close"
+                type="button"
+                aria-label="Cancelar edição"
+                disabled={saving}
+                onClick={cancelPlayerEdit}
+              >
+                <X size={22} strokeWidth={3} />
+              </button>
+            </header>
+
+            <div className="mobile-profile-sheet-fields">
+              <label>
+                <span>Nome</span>
+
+                <input
+                  value={nameDraft}
+                  onChange={(event) => setNameDraft(event.target.value)}
+                  maxLength={60}
+                  autoFocus
+                />
+              </label>
+
+              <label>
+                <span>URL da foto</span>
+
+                <input
+                  type="url"
+                  value={photoDraft}
+                  onChange={(event) => setPhotoDraft(event.target.value)}
+                  placeholder="https://..."
+                />
+              </label>
+
+              <small>
+                Se deixar a foto vazia, será criado um avatar automático.
+              </small>
+
+              {error && (
+                <p className="form-error" role="alert">
+                  {error}
+                </p>
+              )}
+            </div>
+
+            <div className="mobile-profile-sheet-actions">
+              <button
+                className="button"
+                type="button"
+                disabled={saving}
+                onClick={cancelPlayerEdit}
+              >
+                Cancelar
+              </button>
+
+              <button
+                className="button button-secondary"
+                type="button"
+                disabled={saving}
+                onClick={() => void savePlayer(editingPlayer)}
+              >
+                <Check size={18} strokeWidth={3} />
+                {saving ? "Salvando..." : "Salvar alterações"}
+              </button>
+            </div>
+          </aside>
+        </>
+      )}
     </section>
   );
 }

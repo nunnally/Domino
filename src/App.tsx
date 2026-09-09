@@ -270,9 +270,9 @@ const updatePlayer = async (
         <HistoryPage players={players} games={games} />
       )}
 
-      {!loading && !error && page === "regimento" && (
-        <HouseRulesPage players={players} />
-      )}
+{!loading && !error && page === "regimento" && (
+  <HouseRulesPage />
+)}
     </AppShell>
   );
 }
