@@ -1,4 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import {
   ArrowLeft,
@@ -18,7 +23,10 @@ import { PlayerAvatar } from "../../components/PlayerAvatar";
 
 import type { Player } from "../../lib/types";
 
-import { validateGameDraft, type GameDraft } from "../../lib/validation";
+import {
+  validateGameDraft,
+  type GameDraft,
+} from "../../lib/validation";
 
 import type { LiveTeam } from "./LiveGameSetup";
 
@@ -32,6 +40,8 @@ interface MatchEvent {
   team: TeamId;
   playerId?: string;
   createdAt: string;
+  previousScoreA?: number;
+  previousScoreB?: number;
 }
 
 type MatchMoment =
@@ -53,14 +63,10 @@ interface GabuadaCelebration {
 
 interface LiveGameProps {
   players: Player[];
-
   teamA: LiveTeam;
   teamB: LiveTeam;
-
   onSave: (draft: GameDraft) => void | Promise<void>;
-
   onCancel: () => void;
-
   locate?: () => Promise<
     | {
         latitude: number;
@@ -112,47 +118,38 @@ const momentContent: Record<
     kicker: "Ponto!",
     title: "A mesa continua.",
   },
-
   tie: {
     kicker: "Tudo igual",
     title: "Ninguém abre vantagem.",
   },
-
   close: {
     kicker: "Partida acirrada",
     title: "Agora ninguém pisca.",
   },
-
   comeback: {
     kicker: "Virou!",
     title: "A mesa mudou de lado.",
   },
-
   "match-point": {
     kicker: "Ponto decisivo",
     title: "Uma mão pode acabar com tudo.",
   },
-
   gabuada: {
     kicker: "Gabuada!",
     title: "Pode registrar na súmula.",
   },
-
   "gabuada-opening": {
     kicker: "Começou assim?!",
     title: "Gabuada logo de saída.",
   },
-
   "gabuada-comeback": {
     kicker: "Gabuada na reação!",
     title: "A pressão mudou de lado.",
   },
-
   victory: {
     kicker: "Vitória!",
     title: "Tem dupla vencedora.",
   },
-
   dominant: {
     kicker: "4 × 0",
     title: "Não deixou nem respirar.",
@@ -169,10 +166,11 @@ export function LiveGame({
 }: LiveGameProps) {
   const startedAtRef = useRef<string | null>(null);
 
+  const victoryPanelRef = useRef<HTMLElement | null>(null);
+
   const gabuadaAnimationTimerRef = useRef<number | null>(null);
 
   const [scoreA, setScoreA] = useState(0);
-
   const [scoreB, setScoreB] = useState(0);
 
   const [events, setEvents] = useState<MatchEvent[]>([]);
@@ -208,10 +206,20 @@ export function LiveGame({
     [players, teamB],
   );
 
-  const finished = scoreA >= WINNING_SCORE || scoreB >= WINNING_SCORE;
+  const finished =
+    scoreA >= WINNING_SCORE ||
+    scoreB >= WINNING_SCORE;
 
   const winningTeam: TeamId | null =
-    scoreA >= WINNING_SCORE ? "A" : scoreB >= WINNING_SCORE ? "B" : null;
+    scoreA >= WINNING_SCORE
+      ? "A"
+      : scoreB >= WINNING_SCORE
+        ? "B"
+        : null;
+
+  const pointEventsCount = events.filter(
+    (event) => event.type === "point",
+  ).length;
 
   const getTeamPlayers = (team: TeamId) =>
     team === "A" ? teamAPlayers : teamBPlayers;
@@ -221,6 +229,31 @@ export function LiveGame({
       .map((player) => player.name)
       .join(" + ");
 
+  const ensureStartedAt = () => {
+    if (!startedAtRef.current) {
+      startedAtRef.current = new Date().toISOString();
+    }
+
+    return startedAtRef.current;
+  };
+
+  useEffect(() => {
+    if (!finished) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      victoryPanelRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }, 650);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [finished]);
+
   useEffect(() => {
     return () => {
       if (gabuadaAnimationTimerRef.current) {
@@ -228,12 +261,6 @@ export function LiveGame({
       }
     };
   }, []);
-
-  const ensureStartedAt = () => {
-    if (!startedAtRef.current) {
-      startedAtRef.current = new Date().toISOString();
-    }
-  };
 
   const hadLargeDeficit = (team: TeamId) => {
     let a = 0;
@@ -269,8 +296,14 @@ export function LiveGame({
     nextA: number,
     nextB: number,
   ): MatchMoment => {
-    if (nextA === WINNING_SCORE || nextB === WINNING_SCORE) {
-      const loserScore = nextA === WINNING_SCORE ? nextB : nextA;
+    if (
+      nextA === WINNING_SCORE ||
+      nextB === WINNING_SCORE
+    ) {
+      const loserScore =
+        nextA === WINNING_SCORE
+          ? nextB
+          : nextA;
 
       if (loserScore === 0) {
         return "dominant";
@@ -280,23 +313,40 @@ export function LiveGame({
     }
 
     const scoringTeamWasLosing =
-      team === "A" ? previousA < previousB : previousB < previousA;
+      team === "A"
+        ? previousA < previousB
+        : previousB < previousA;
 
-    const scoringTeamNowAhead = team === "A" ? nextA > nextB : nextB > nextA;
+    const scoringTeamNowAhead =
+      team === "A"
+        ? nextA > nextB
+        : nextB > nextA;
 
-    if (scoringTeamWasLosing && scoringTeamNowAhead) {
+    if (
+      scoringTeamWasLosing &&
+      scoringTeamNowAhead
+    ) {
       return "comeback";
     }
 
-    if (nextA === nextB && nextA >= 2) {
+    if (
+      nextA === nextB &&
+      nextA >= 2
+    ) {
       return "tie";
     }
 
-    if (nextA === WINNING_SCORE - 1 || nextB === WINNING_SCORE - 1) {
+    if (
+      nextA === WINNING_SCORE - 1 ||
+      nextB === WINNING_SCORE - 1
+    ) {
       return "match-point";
     }
 
-    if (Math.abs(nextA - nextB) === 1 && Math.max(nextA, nextB) >= 2) {
+    if (
+      Math.abs(nextA - nextB) === 1 &&
+      Math.max(nextA, nextB) >= 2
+    ) {
       return "close";
     }
 
@@ -308,7 +358,9 @@ export function LiveGame({
     selectedTeam: TeamId,
   ) => {
     if (gabuadaAnimationTimerRef.current) {
-      window.clearTimeout(gabuadaAnimationTimerRef.current);
+      window.clearTimeout(
+        gabuadaAnimationTimerRef.current,
+      );
     }
 
     setGabuadaCelebration({
@@ -316,9 +368,10 @@ export function LiveGame({
       teamName: teamName(selectedTeam),
     });
 
-    gabuadaAnimationTimerRef.current = window.setTimeout(() => {
-      setGabuadaCelebration(null);
-    }, 2200);
+    gabuadaAnimationTimerRef.current =
+      window.setTimeout(() => {
+        setGabuadaCelebration(null);
+      }, 2200);
   };
 
   const addPoint = (team: TeamId) => {
@@ -329,12 +382,17 @@ export function LiveGame({
     ensureStartedAt();
 
     const previousA = scoreA;
-
     const previousB = scoreB;
 
-    const nextA = team === "A" ? scoreA + 1 : scoreA;
+    const nextA =
+      team === "A"
+        ? Math.min(scoreA + 1, WINNING_SCORE)
+        : scoreA;
 
-    const nextB = team === "B" ? scoreB + 1 : scoreB;
+    const nextB =
+      team === "B"
+        ? Math.min(scoreB + 1, WINNING_SCORE)
+        : scoreB;
 
     const nextMoment = detectPointMoment(
       team,
@@ -354,104 +412,83 @@ export function LiveGame({
     setScoreA(nextA);
     setScoreB(nextB);
 
-    setEvents((current) => [...current, pointEvent]);
+    setEvents((current) => [
+      ...current,
+      pointEvent,
+    ]);
 
     setMoment(nextMoment);
     setMomentTeam(team);
-
     setGabuadaTeam(null);
-
     setSaveError("");
   };
 
-const registerGabuada = (
-  team: TeamId,
-  playerId: string,
-) => {
-  if (
-    finished ||
-    saving ||
-    saved
-  ) {
-    return;
-  }
+  const registerGabuada = (
+    team: TeamId,
+    playerId: string,
+  ) => {
+    if (finished || saving || saved) {
+      return;
+    }
 
-  ensureStartedAt();
-
-  const player =
-    players.find(
+    const player = players.find(
       (currentPlayer) =>
         currentPlayer.id === playerId,
     );
 
-  if (!player) {
-    return;
-  }
+    if (!player) {
+      return;
+    }
 
-  const previousScoreA = scoreA;
-  const previousScoreB = scoreB;
+    ensureStartedAt();
 
-  const totalPoints =
-    scoreA + scoreB;
+    const previousScoreA = scoreA;
+    const previousScoreB = scoreB;
 
-  let nextMoment: MatchMoment =
-    "gabuada";
+    const totalPoints = scoreA + scoreB;
 
-  if (totalPoints === 0) {
-    nextMoment =
-      "gabuada-opening";
-  } else if (
-    hadLargeDeficit(team)
-  ) {
-    nextMoment =
-      "gabuada-comeback";
-  }
+    let nextMoment: MatchMoment = "gabuada";
 
-  const event: MatchEvent = {
-    id: crypto.randomUUID(),
-    type: "gabuada",
-    team,
-    playerId,
-    createdAt:
-      new Date().toISOString(),
+    if (totalPoints <= 1) {
+      nextMoment = "gabuada-opening";
+    } else if (hadLargeDeficit(team)) {
+      nextMoment = "gabuada-comeback";
+    }
+
+    const event: MatchEvent = {
+      id: crypto.randomUUID(),
+      type: "gabuada",
+      team,
+      playerId,
+      createdAt: new Date().toISOString(),
+      previousScoreA,
+      previousScoreB,
+    };
+
+    if (team === "A") {
+      setScoreA(WINNING_SCORE);
+    } else {
+      setScoreB(WINNING_SCORE);
+    }
+
+    setEvents((current) => [
+      ...current,
+      event,
+    ]);
+
+    setMoment(nextMoment);
+    setMomentTeam(team);
+    setGabuadaTeam(null);
+    setSaveError("");
+
+    triggerGabuadaCelebration(
+      player.name,
+      team,
+    );
   };
 
-  if (team === "A") {
-    setScoreA(WINNING_SCORE);
-  } else {
-    setScoreB(WINNING_SCORE);
-  }
-
-  setEvents((current) => [
-    ...current,
-    event,
-  ]);
-
-  setMoment(nextMoment);
-  setMomentTeam(team);
-  setGabuadaTeam(null);
-  setSaveError("");
-
-  triggerGabuadaCelebration(
-    player.name,
-    team,
-  );
-
-  console.log(
-    "Gabuada registrada",
-    {
-      jogador: player.name,
-      dupla: team,
-      placarAnterior: `${previousScoreA} x ${previousScoreB}`,
-      placarFinal:
-        team === "A"
-          ? `4 x ${previousScoreB}`
-          : `${previousScoreA} x 4`,
-    },
-  );
-};
   const undoLastEvent = () => {
-    if (saving || saved || finished) {
+    if (saving || saved) {
       return;
     }
 
@@ -463,19 +500,43 @@ const registerGabuada = (
 
     if (lastEvent.type === "point") {
       if (lastEvent.team === "A") {
-        setScoreA((current) => Math.max(0, current - 1));
+        setScoreA((current) =>
+          Math.max(0, current - 1),
+        );
       } else {
-        setScoreB((current) => Math.max(0, current - 1));
+        setScoreB((current) =>
+          Math.max(0, current - 1),
+        );
       }
     }
 
-    setEvents((current) => current.slice(0, -1));
+    if (lastEvent.type === "gabuada") {
+      setScoreA(
+        lastEvent.previousScoreA ?? 0,
+      );
+
+      setScoreB(
+        lastEvent.previousScoreB ?? 0,
+      );
+
+      if (gabuadaAnimationTimerRef.current) {
+        window.clearTimeout(
+          gabuadaAnimationTimerRef.current,
+        );
+
+        gabuadaAnimationTimerRef.current = null;
+      }
+
+      setGabuadaCelebration(null);
+    }
+
+    setEvents((current) =>
+      current.slice(0, -1),
+    );
 
     setMoment(null);
     setMomentTeam(null);
-
     setGabuadaTeam(null);
-
     setSaveError("");
   };
 
@@ -483,9 +544,11 @@ const registerGabuada = (
     try {
       return await Promise.race([
         locate(),
-
         new Promise<undefined>((resolve) => {
-          window.setTimeout(() => resolve(undefined), 1800);
+          window.setTimeout(
+            () => resolve(undefined),
+            1800,
+          );
         }),
       ]);
     } catch {
@@ -498,36 +561,53 @@ const registerGabuada = (
       return;
     }
 
-    setSaving(true);
-    setSaveError("");
+    const winnerIds =
+      winningTeam === "A"
+        ? teamA
+        : teamB;
 
-    const winnerIds = winningTeam === "A" ? teamA : teamB;
+    const loserIds =
+      winningTeam === "A"
+        ? teamB
+        : teamA;
 
-    const loserIds = winningTeam === "A" ? teamB : teamA;
+    const winnerScore =
+      winningTeam === "A"
+        ? scoreA
+        : scoreB;
 
-    const winnerScore = winningTeam === "A" ? scoreA : scoreB;
+    const loserScore =
+      winningTeam === "A"
+        ? scoreB
+        : scoreA;
 
-    const loserScore = winningTeam === "A" ? scoreB : scoreA;
-
-    const validGabuada = [...events]
+    const lastGabuada = [...events]
       .reverse()
       .find(
         (event) =>
           event.type === "gabuada" &&
-          event.team === winningTeam &&
           Boolean(event.playerId),
       );
+
+    const validGabuadaId =
+      lastGabuada?.playerId &&
+      winnerIds.includes(
+        lastGabuada.playerId,
+      )
+        ? lastGabuada.playerId
+        : undefined;
 
     const draft: GameDraft = {
       winnerIds,
       loserIds,
       winnerScore,
       loserScore,
-
-      playedAt: startedAtRef.current ?? new Date().toISOString(),
-
-      gabuadaIds: validGabuada?.playerId ? [validGabuada.playerId] : [],
-
+      playedAt:
+        startedAtRef.current ??
+        new Date().toISOString(),
+      gabuadaIds: validGabuadaId
+        ? [validGabuadaId]
+        : [],
       senaIds: [],
     };
 
@@ -547,13 +627,15 @@ const registerGabuada = (
           "Não foi possível validar os dados da partida.",
       );
 
-      setSaving(false);
-
       return;
     }
 
+    setSaving(true);
+    setSaveError("");
+
     try {
-      const location = await getLocationForSave();
+      const location =
+        await getLocationForSave();
 
       await onSave({
         ...draft,
@@ -561,50 +643,40 @@ const registerGabuada = (
       });
 
       setSaved(true);
-} catch (error) {
-  console.error(
-    "Erro ao salvar partida ao vivo:",
-    error,
-  );
+    } catch (error) {
+      console.error(
+        "Erro ao salvar partida ao vivo:",
+        error,
+      );
 
-  const supabaseError =
-    error as {
-      code?: string;
-      message?: string;
-      details?: string;
-      hint?: string;
-    };
-
-  const parts = [
-    supabaseError.code,
-    supabaseError.message,
-    supabaseError.details,
-    supabaseError.hint,
-  ].filter(Boolean);
-
-  setSaveError(
-    parts.length > 0
-      ? parts.join(" — ")
-      : "Não foi possível salvar a partida.",
-  );
-} finally {
-  setSaving(false);
-}
+      setSaveError(
+        "Não foi possível salvar a partida. Tente novamente.",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const renderTeamAvatars = (team: TeamId) => (
+  const renderTeamAvatars = (
+    team: TeamId,
+  ) => (
     <div className="live-team-players">
-      {getTeamPlayers(team).map((player) => (
-        <div className="live-team-player" key={player.id}>
-          <PlayerAvatar
-            name={player.name}
-            photoUrl={player.photoUrl}
-            mood="serious"
-          />
+      {getTeamPlayers(team).map(
+        (player) => (
+          <div
+            className="live-team-player"
+            key={player.id}
+          >
+            <PlayerAvatar
+              name={player.name}
+              photoUrl={player.photoUrl}
+              mood="serious"
+            />
 
-          <span>{player.name}</span>
-        </div>
-      ))}
+            <span>{player.name}</span>
+          </div>
+        ),
+      )}
     </div>
   );
 
@@ -616,7 +688,9 @@ const registerGabuada = (
     return (
       <div
         className="gabuada-picker-backdrop"
-        onClick={() => setGabuadaTeam(null)}
+        onClick={() =>
+          setGabuadaTeam(null)
+        }
       >
         <div
           className="gabuada-picker"
@@ -628,22 +702,36 @@ const registerGabuada = (
           }}
         >
           <div className="gabuada-picker-icon">
-            <Bomb size={30} strokeWidth={2.7} />
+            <Bomb
+              size={30}
+              strokeWidth={2.7}
+            />
           </div>
 
-          <span className="eyebrow">Gabuada</span>
+          <span className="eyebrow">
+            Gabuada
+          </span>
 
           <h2>Quem aplicou?</h2>
 
-          <p>{teamName(gabuadaTeam)}</p>
+          <p>
+            {teamName(gabuadaTeam)}
+          </p>
 
           <div className="gabuada-player-options">
-            {getTeamPlayers(gabuadaTeam).map((player) => (
+            {getTeamPlayers(
+              gabuadaTeam,
+            ).map((player) => (
               <button
                 type="button"
                 className="gabuada-player-option"
                 key={player.id}
-                onClick={() => registerGabuada(gabuadaTeam, player.id)}
+                onClick={() =>
+                  registerGabuada(
+                    gabuadaTeam,
+                    player.id,
+                  )
+                }
               >
                 <PlayerAvatar
                   name={player.name}
@@ -651,7 +739,9 @@ const registerGabuada = (
                   mood="serious"
                 />
 
-                <strong>{player.name}</strong>
+                <strong>
+                  {player.name}
+                </strong>
               </button>
             ))}
           </div>
@@ -659,7 +749,9 @@ const registerGabuada = (
           <button
             className="button"
             type="button"
-            onClick={() => setGabuadaTeam(null)}
+            onClick={() =>
+              setGabuadaTeam(null)
+            }
           >
             Cancelar
           </button>
@@ -673,11 +765,14 @@ const registerGabuada = (
       ? Zap
       : moment === "victory"
         ? Trophy
-        : moment?.startsWith("gabuada")
+        : moment?.startsWith(
+              "gabuada",
+            )
           ? Bomb
           : moment === "comeback"
             ? Flame
-            : moment === "close" || moment === "tie"
+            : moment === "close" ||
+                moment === "tie"
               ? Swords
               : Sparkles;
 
@@ -685,7 +780,11 @@ const registerGabuada = (
     <section className="live-game-page">
       <div className="page-wrap live-game-shell">
         <header className="live-game-topbar">
-          <button className="back-button" type="button" onClick={onCancel}>
+          <button
+            className="back-button"
+            type="button"
+            onClick={onCancel}
+          >
             <ArrowLeft size={19} />
             Sair
           </button>
@@ -699,18 +798,26 @@ const registerGabuada = (
         <main
           className={[
             "live-score-card",
-            moment ? `live-moment-${moment}` : "",
+            moment
+              ? `live-moment-${moment}`
+              : "",
           ].join(" ")}
         >
           <div className="live-score-heading">
             <div>
-              <p className="eyebrow">Partida ao vivo</p>
+              <p className="eyebrow">
+                Partida ao vivo
+              </p>
 
-              <h1>Placar da mesa</h1>
+              <h1>
+                Placar da mesa
+              </h1>
             </div>
 
             <div className="live-round-count">
-              <strong>{scoreA + scoreB + 1}</strong>
+              <strong>
+                {pointEventsCount + 1}
+              </strong>
 
               <span>Rodada</span>
             </div>
@@ -721,27 +828,42 @@ const registerGabuada = (
               className={[
                 "live-team",
                 "live-team-a",
-                momentTeam === "A" ? "moment-team" : "",
+                momentTeam === "A"
+                  ? "moment-team"
+                  : "",
               ].join(" ")}
             >
-              <span className="sticker sticker-yellow">Dupla 01</span>
+              <span className="sticker sticker-yellow">
+                Dupla 01
+              </span>
 
               {renderTeamAvatars("A")}
 
-              <strong className="live-score-number">{scoreA}</strong>
+              <strong className="live-score-number">
+                {scoreA}
+              </strong>
 
               <button
                 className="live-point-button"
                 type="button"
-                disabled={finished || saving || saved}
-                onClick={() => addPoint("A")}
+                disabled={
+                  finished ||
+                  saving ||
+                  saved
+                }
+                onClick={() =>
+                  addPoint("A")
+                }
               >
                 +1 ponto
               </button>
             </section>
 
             <div className="live-score-versus">
-              <Swords size={24} strokeWidth={3} />
+              <Swords
+                size={24}
+                strokeWidth={3}
+              />
 
               <strong>VS.</strong>
             </div>
@@ -750,20 +872,32 @@ const registerGabuada = (
               className={[
                 "live-team",
                 "live-team-b",
-                momentTeam === "B" ? "moment-team" : "",
+                momentTeam === "B"
+                  ? "moment-team"
+                  : "",
               ].join(" ")}
             >
-              <span className="sticker sticker-violet">Dupla 02</span>
+              <span className="sticker sticker-violet">
+                Dupla 02
+              </span>
 
               {renderTeamAvatars("B")}
 
-              <strong className="live-score-number">{scoreB}</strong>
+              <strong className="live-score-number">
+                {scoreB}
+              </strong>
 
               <button
                 className="live-point-button"
                 type="button"
-                disabled={finished || saving || saved}
-                onClick={() => addPoint("B")}
+                disabled={
+                  finished ||
+                  saving ||
+                  saved
+                }
+                onClick={() =>
+                  addPoint("B")
+                }
               >
                 +1 ponto
               </button>
@@ -771,15 +905,38 @@ const registerGabuada = (
           </div>
 
           {moment && (
-            <div className={`live-moment-banner live-moment-banner-${moment}`}>
-              <MomentIcon size={31} strokeWidth={2.7} />
+            <div
+              className={`live-moment-banner live-moment-banner-${moment}`}
+            >
+              <MomentIcon
+                size={31}
+                strokeWidth={2.7}
+              />
 
               <div>
-                <span>{momentContent[moment].kicker}</span>
+                <span>
+                  {
+                    momentContent[
+                      moment
+                    ].kicker
+                  }
+                </span>
 
-                <strong>{momentContent[moment].title}</strong>
+                <strong>
+                  {
+                    momentContent[
+                      moment
+                    ].title
+                  }
+                </strong>
 
-                {momentTeam && <small>{teamName(momentTeam)}</small>}
+                {momentTeam && (
+                  <small>
+                    {teamName(
+                      momentTeam,
+                    )}
+                  </small>
+                )}
               </div>
             </div>
           )}
@@ -789,59 +946,113 @@ const registerGabuada = (
               <button
                 className="gabuada-button"
                 type="button"
-                onClick={() => setGabuadaTeam("A")}
+                onClick={() =>
+                  setGabuadaTeam("A")
+                }
               >
                 <Bomb size={20} />
                 Gabuada
-                <small>Dupla 01</small>
+                <small>
+                  Dupla 01
+                </small>
               </button>
 
               <button
                 className="gabuada-button"
                 type="button"
-                onClick={() => setGabuadaTeam("B")}
+                onClick={() =>
+                  setGabuadaTeam("B")
+                }
               >
                 <Bomb size={20} />
                 Gabuada
-                <small>Dupla 02</small>
+                <small>
+                  Dupla 02
+                </small>
               </button>
             </div>
           )}
 
-          {finished && winningTeam && (
-            <section className="live-victory-panel">
-              <Crown
-                className="live-victory-crown"
-                size={47}
-                strokeWidth={2.5}
-              />
+          {finished &&
+            winningTeam && (
+              <section
+                className="live-victory-panel"
+                ref={victoryPanelRef}
+              >
+                <Crown
+                  className="live-victory-crown"
+                  size={47}
+                  strokeWidth={2.5}
+                />
 
-              <span>Partida encerrada</span>
+                <span>
+                  Partida encerrada
+                </span>
 
-              <h2>{teamName(winningTeam)}</h2>
+                <h2>
+                  {teamName(
+                    winningTeam,
+                  )}
+                </h2>
 
-              <strong>
-                {scoreA} × {scoreB}
-              </strong>
+                <strong>
+                  {scoreA} × {scoreB}
+                </strong>
 
-              <p>A súmula não mente.</p>
+                <p>
+                  A súmula não mente.
+                </p>
 
-              {saved && (
-                <div className="live-save-success">
-                  <Check size={20} />
-                  Partida registrada nos resultados.
-                </div>
-              )}
-            </section>
-          )}
+                {!saved && (
+                  <button
+                    className="button button-primary live-save-button"
+                    type="button"
+                    disabled={saving}
+                    onClick={() => {
+                      void saveFinishedGame();
+                    }}
+                  >
+                    <Check size={19} />
+
+                    {saving
+                      ? "Salvando…"
+                      : saveError
+                        ? "Tentar salvar novamente"
+                        : "Salvar nos resultados"}
+                  </button>
+                )}
+
+                {saveError && (
+                  <p
+                    className="form-error live-save-error"
+                    role="alert"
+                  >
+                    {saveError}
+                  </p>
+                )}
+
+                {saved && (
+                  <p className="live-save-success">
+                    <Check size={20} />
+                    Partida registrada nos resultados.
+                  </p>
+                )}
+              </section>
+            )}
 
           <section className="live-match-log">
             <div className="live-match-log-heading">
-              <span>Últimas rodadas</span>
+              <span>
+                Últimas rodadas
+              </span>
 
               <button
                 type="button"
-                disabled={events.length === 0 || saving || saved || finished}
+                disabled={
+                  events.length === 0 ||
+                  saving ||
+                  saved
+                }
                 onClick={undoLastEvent}
               >
                 <Undo2 size={16} />
@@ -858,38 +1069,63 @@ const registerGabuada = (
                 {[...events]
                   .reverse()
                   .slice(0, 5)
-                  .map((event, index) => {
-                    const player = event.playerId
-                      ? players.find(
-                          (currentPlayer) =>
-                            currentPlayer.id === event.playerId,
-                        )
-                      : null;
+                  .map(
+                    (
+                      event,
+                      index,
+                    ) => {
+                      const player =
+                        event.playerId
+                          ? players.find(
+                              (
+                                currentPlayer,
+                              ) =>
+                                currentPlayer.id ===
+                                event.playerId,
+                            )
+                          : null;
 
-                    return (
-                      <div className="live-log-item" key={event.id}>
-                        <span className="live-log-number">
-                          {String(events.length - index).padStart(2, "0")}
-                        </span>
-
-                        <div>
-                          <strong>
-                            {event.type === "gabuada"
-                              ? `Gabuada — ${
-                                  player?.name ?? teamName(event.team)
-                                }`
-                              : `${teamName(event.team)} marcou`}
-                          </strong>
-
-                          <span>
-                            {event.type === "gabuada"
-                              ? "💥 Gabuada"
-                              : "+1 ponto"}
+                      return (
+                        <div
+                          className="live-log-item"
+                          key={event.id}
+                        >
+                          <span className="live-log-number">
+                            {String(
+                              events.length -
+                                index,
+                            ).padStart(
+                              2,
+                              "0",
+                            )}
                           </span>
+
+                          <div>
+                            <strong>
+                              {event.type ===
+                              "gabuada"
+                                ? `Gabuada — ${
+                                    player?.name ??
+                                    teamName(
+                                      event.team,
+                                    )
+                                  }`
+                                : `${teamName(
+                                    event.team,
+                                  )} marcou`}
+                            </strong>
+
+                            <span>
+                              {event.type ===
+                              "gabuada"
+                                ? "💥 Gabuada"
+                                : "+1 ponto"}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    },
+                  )}
               </div>
             )}
           </section>
@@ -899,7 +1135,9 @@ const registerGabuada = (
               <button
                 className="button"
                 type="button"
-                disabled={events.length === 0}
+                disabled={
+                  events.length === 0
+                }
                 onClick={undoLastEvent}
               >
                 <RotateCcw size={18} />
@@ -908,45 +1146,6 @@ const registerGabuada = (
             </footer>
           )}
         </main>
-
-        {finished && winningTeam && !saved && (
-          <div className="live-save-dock">
-            <div className="live-save-dock-result">
-              <div>
-                <span>Resultado final</span>
-
-                <strong>{teamName(winningTeam)}</strong>
-              </div>
-
-              <b>
-                {scoreA} × {scoreB}
-              </b>
-            </div>
-
-            <button
-              className="live-save-result-button"
-              type="button"
-              disabled={saving}
-              onClick={() => {
-                void saveFinishedGame();
-              }}
-            >
-              <Check size={20} />
-
-              {saving
-                ? "Salvando..."
-                : saveError
-                  ? "Tentar salvar novamente"
-                  : "Salvar nos resultados"}
-            </button>
-
-            {saveError && (
-              <p className="form-error live-save-dock-error" role="alert">
-                {saveError}
-              </p>
-            )}
-          </div>
-        )}
       </div>
 
       {renderGabuadaPicker()}
@@ -974,14 +1173,20 @@ const registerGabuada = (
             <span>!</span>
           </div>
 
-          <div className="gabuada-big-title">GABUADA!</div>
+          <div className="gabuada-big-title">
+            GABUADA!
+          </div>
 
           <div className="gabuada-celebration-player">
-            {gabuadaCelebration.playerName}
+            {
+              gabuadaCelebration.playerName
+            }
           </div>
 
           <div className="gabuada-celebration-team">
-            {gabuadaCelebration.teamName}
+            {
+              gabuadaCelebration.teamName
+            }
           </div>
 
           <Bomb
