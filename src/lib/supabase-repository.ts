@@ -87,11 +87,31 @@ export function createSupabaseRepository(url: string, publishableKey: string): D
       if (error) throw error
       return (data as GameRow[]).map(toGame)
     },
-    async addGame(game) {
-      const { data, error } = await client.from('games').insert(toGameRow(game)).select().single()
-      if (error) throw error
-      return toGame(data as GameRow)
-    },
+  async addGame(game) {
+  const row = toGameRow(game);
+
+  console.log("Payload enviado ao Supabase:", row);
+
+  const { data, error } = await client
+    .from("games")
+    .insert(row)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Erro Supabase addGame:", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      payload: row,
+    });
+
+    throw error;
+  }
+
+  return toGame(data as GameRow);
+},
     async addPlayer(player) {
       const { data, error } = await client.from('players').insert(toPlayerRow(player)).select().single()
       if (error) throw error
