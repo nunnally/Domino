@@ -72,3 +72,29 @@ export interface HeadToHeadStat {
   trailerWins: number
   rivalryLabel: 'Primeiro confronto' | 'Duelo aberto' | 'Carrasco da rodada'
 }
+
+export interface PlayerScorePoint {
+  gameId: string
+  playedAt: string
+  score: number
+  result: 'win' | 'loss'
+  opponentNames: string[]
+  partnerName?: string
+  gabuada: boolean
+  sena: boolean
+}
+
+export interface PlayerRelationship {
+  playerId: string
+  name: string
+  photoUrl: string
+  games: number
+  wins: number
+  losses: number
+}
+
+export interface PlayerRelationships {
+  mostWinsWith: PlayerRelationship[]
+  mostLossesWith: PlayerRelationship[]
+  mostWinsAgainst: PlayerRelationship[]
+}

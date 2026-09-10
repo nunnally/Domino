@@ -153,6 +153,152 @@ export function getIndividualStats(players: Player[], games: Game[]): Individual
     )
 }
 
+const relationPlayers = (
+  players: Player[],
+  relationMap: Map<string, { games: number; wins: number; losses: number }>,
+) => [...relationMap.entries()]
+  .map(([playerId, relation]) => {
+    const player = players.find((candidate) => candidate.id === playerId)
+    if (!player) return null
+    return { playerId, name: player.name, photoUrl: player.photoUrl, ...relation }
+  })
+  .filter((player): player is PlayerRelationship => Boolean(player))
+
+const topRelations = (
+  relations: PlayerRelationship[],
+  metric: 'wins' | 'losses',
+) => {
+  const withResults = relations.filter((relation) => relation[metric] > 0)
+  if (withResults.length === 0) return []
+  const highest = Math.max(...withResults.map((relation) => relation[metric]))
+  return withResults
+    .filter((relation) => relation[metric] === highest)
+    .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+}
+
+export function getPlayerScoreTimeline(
+  players: Player[],
+  games: Game[],
+  playerId: string,
+): PlayerScorePoint[] {
+  const playersById = playerMap(players)
+  if (!playersById.has(playerId)) return []
+
+  let playedGames = 0
+  let wins = 0
+  let lostSenas = 0
+  const points: PlayerScorePoint[] = []
+
+  for (const game of [...games].sort(compareChronologically)) {
+    const isWinner = game.winnerIds.includes(playerId as never)
+    const isLoser = game.loserIds.includes(playerId as never)
+    if (!isWinner && !isLoser) continue
+
+    const ownTeam = isWinner ? game.winnerIds : game.loserIds
+    const opponentTeam = isWinner ? game.loserIds : game.winnerIds
+    const result = isWinner ? 'win' : 'loss'
+    const sena = (game.senaIds ?? []).includes(playerId)
+    const gabuada = (game.gabuadaIds ?? []).includes(playerId)
+
+    playedGames += 1
+    if (isWinner) wins += 1
+    if (sena && isLoser) lostSenas += 1
+
+    points.push({
+      gameId: game.id,
+      playedAt: game.playedAt,
+      score: scoreFromRecord(wins, playedGames, lostSenas),
+      result,
+      partnerName: ownTeam
+        .filter((id) => id !== playerId)
+        .map((id) => playersById.get(id)?.name)
+        .find((name): name is string => Boolean(name)),
+      opponentNames: opponentTeam
+        .map((id) => playersById.get(id)?.name)
+        .filter((name): name is string => Boolean(name))
+        .sort((a, b) => a.localeCompare(b, 'pt-BR')),
+      gabuada,
+      sena,
+    })
+  }
+
+  return points
+}
+
+export function getPlayerRelationships(
+  players: Player[],
+  games: Game[],
+  playerId: string,
+): PlayerRelationships {
+  const playersById = playerMap(players)
+  if (!playersById.has(playerId)) {
+    return { mostWinsWith: [], mostLossesWith: [], mostWinsAgainst: [] }
+  }
+
+  const withMap = new Map<string, { games: number; wins: number; losses: number }>()
+  const againstMap = new Map<string, { games: number; wins: number; losses: number }>()
+
+  const add = (
+    map: Map<string, { games: number; wins: number; losses: number }>,
+    id: string,
+    won: boolean,
+  ) => {
+    if (id === playerId || !playersById.has(id)) return
+    const relation = map.get(id) ?? { games: 0, wins: 0, losses: 0 }
+    relation.games += 1
+    if (won) relation.wins += 1
+    else relation.losses += 1
+    map.set(id, relation)
+  }
+
+  for (const game of games) {
+    const won = game.winnerIds.includes(playerId as never)
+    const lost = game.loserIds.includes(playerId as never)
+    if (!won && !lost) continue
+    const ownTeam = won ? game.winnerIds : game.loserIds
+    const opposingTeam = won ? game.loserIds : game.winnerIds
+    ownTeam.forEach((id) => add(withMap, id, won))
+    opposingTeam.forEach((id) => add(againstMap, id, won))
+  }
+
+  const withRelations = relationPlayers(players, withMap)
+  const againstRelations = relationPlayers(players, againstMap)
+
+  return {
+    mostWinsWith: topRelations(withRelations, 'wins'),
+    mostLossesWith: topRelations(withRelations, 'losses'),
+    mostWinsAgainst: topRelations(againstRelations, 'wins'),
+  }
+}
+
+export function getHeadToHeadBetweenPlayers(
+  players: Player[],
+  games: Game[],
+  playerIds: string[],
+): Record<string, Record<string, number>> {
+  const allowed = new Set(
+    players.filter((player) => !isGuestPlayer(player)).map((player) => player.id),
+  )
+  const selected = [...new Set(playerIds)].filter((id) => allowed.has(id))
+  const matrix: Record<string, Record<string, number>> = {}
+
+  for (const rowId of selected) {
+    matrix[rowId] = {}
+    for (const columnId of selected) matrix[rowId][columnId] = 0
+  }
+
+  for (const game of games) {
+    for (const winnerId of game.winnerIds) {
+      if (!matrix[winnerId]) continue
+      for (const loserId of game.loserIds) {
+        if (loserId in matrix[winnerId]) matrix[winnerId][loserId] += 1
+      }
+    }
+  }
+
+  return matrix
+}
+
 export function getPairStats(players: Player[], games: Game[]): PairStat[] {
   const playersById = playerMap(players)
   const stats = new Map<string, PairStat>()

@@ -3,8 +3,11 @@ import { describe, expect, it } from 'vitest'
 import { seedGames, seedPlayers } from './seed'
 import {
   filterGamesByPeriod,
+  getHeadToHeadBetweenPlayers,
   getHeadToHeadStats,
   getIndividualStats,
+  getPlayerRelationships,
+  getPlayerScoreTimeline,
   getPairStats,
 } from './stats'
 
@@ -43,6 +46,73 @@ describe('estatísticas das sete partidas iniciais', () => {
       { name: 'David', games: 4, wins: 0, losses: 4, winRate: 0, maxWinStreak: 0, maxLossStreak: 4 },
       { name: 'Emanoel', games: 5, wins: 0, losses: 5, winRate: 0, maxWinStreak: 0, maxLossStreak: 5 },
     ])
+  })
+
+  it('calcula a linha do tempo de score em ordem cronológica', () => {
+    const games = [
+      {
+        ...seedGames[0],
+        id: 'timeline-2',
+        playedAt: '2026-09-02T11:00:00-03:00',
+        winnerIds: ['david', 'emanoel'] as [string, string],
+        loserIds: ['cesar', 'vinicius'] as [string, string],
+        senaIds: ['cesar'],
+      },
+      {
+        ...seedGames[1],
+        id: 'timeline-1',
+        playedAt: '2026-09-02T10:00:00-03:00',
+        winnerIds: ['cesar', 'vinicius'] as [string, string],
+        loserIds: ['david', 'emanoel'] as [string, string],
+      },
+    ]
+
+    const points = getPlayerScoreTimeline(seedPlayers, games, 'cesar')
+
+    expect(points.map(({ gameId, result }) => ({ gameId, result }))).toEqual([
+      { gameId: 'timeline-1', result: 'win' },
+      { gameId: 'timeline-2', result: 'loss' },
+    ])
+    expect(points[1].sena).toBe(true)
+    expect(points[1].score).toBeLessThan(points[0].score)
+  })
+
+  it('encontra parceiros e adversários mais frequentes', () => {
+    const games = [
+      { ...seedGames[1], id: 'relation-1', loserIds: ['david', 'emanoel'] as [string, string] },
+      { ...seedGames[3], id: 'relation-2', loserIds: ['david', 'emanoel'] as [string, string] },
+      { ...seedGames[4], id: 'relation-3', winnerIds: ['cesar', 'vinicius'] as [string, string], loserIds: ['david', 'emanoel'] as [string, string] },
+    ]
+
+    const relationships = getPlayerRelationships(seedPlayers, games, 'cesar')
+
+    expect(relationships.mostWinsWith[0].name).toBe('Vinícius')
+    expect(relationships.mostWinsWith[0].wins).toBe(3)
+    expect(relationships.mostWinsAgainst.map(({ name }) => name)).toEqual([
+      'David',
+      'Emanoel',
+    ])
+  })
+
+  it('monta a matriz de vitórias entre jogadores selecionados', () => {
+    const games = [
+      {
+        ...seedGames[0],
+        id: 'matrix-1',
+        winnerIds: ['cesar', 'gustavo'] as [string, string],
+        loserIds: ['vinicius', 'machilas'] as [string, string],
+      },
+    ]
+
+    const matrix = getHeadToHeadBetweenPlayers(
+      seedPlayers,
+      games,
+      ['cesar', 'vinicius'],
+    )
+
+    expect(matrix.cesar.vinicius).toBe(1)
+    expect(matrix.vinicius.cesar).toBe(0)
+    expect(matrix.cesar.cesar).toBe(0)
   })
 
   it('calcula score com volume, penaliza Sena perdida e marca amostras provisórias', () => {
