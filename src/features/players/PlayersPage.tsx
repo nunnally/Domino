@@ -10,7 +10,7 @@ import {
 
 import { DominoTile } from "../../components/DominoTile";
 import { PlayerAvatar } from "../../components/PlayerAvatar";
-import type { Player } from "../../lib/types";
+import { isGuestPlayer, type Player } from "../../lib/types";
 
 interface PlayersPageProps {
   players: Player[];
@@ -28,6 +28,8 @@ interface PlayersPageProps {
       Pick<Player, "name" | "photoUrl" | "catchphrase" | "active">
     >,
   ) => Promise<void>;
+  onOpenProfile?: (playerId: string) => void;
+  onCompare?: () => void;
 }
 
 export function PlayersPage({
@@ -35,6 +37,8 @@ export function PlayersPage({
   editable,
   onAddPlayer,
   onUpdatePlayer,
+  onOpenProfile,
+  onCompare,
 }: PlayersPageProps) {
   const [showForm, setShowForm] = useState(false);
 
@@ -203,20 +207,12 @@ export function PlayersPage({
           {players.filter((player) => player.active).length} jogadores ativos
         </p>
 
-        {editable ? (
-          <button
-            className="button button-primary"
-            type="button"
-            onClick={() => setShowForm((visible) => !visible)}
-          >
-            <Plus size={19} strokeWidth={3} />
-            Novo jogador
-          </button>
-        ) : (
-          <span className="access-note">
-            Use o PIN em Nova partida para editar
-          </span>
-        )}
+        <div className="players-toolbar-actions">
+          {onCompare && <button className="button button-secondary" type="button" onClick={onCompare}>Comparar jogadores</button>}
+          {editable ? (
+            <button className="button button-primary" type="button" onClick={() => setShowForm((visible) => !visible)}><Plus size={19} strokeWidth={3} />Novo jogador</button>
+          ) : <span className="access-note">Use o PIN em Nova partida para editar</span>}
+        </div>
       </div>
 
       {error && !showForm && (
@@ -382,6 +378,7 @@ export function PlayersPage({
                   />
 
                   <h2>{player.name}</h2>
+                  {!isGuestPlayer(player) && onOpenProfile && <button className="player-profile-link" type="button" onClick={() => onOpenProfile(player.id)}>Ver perfil</button>}
                 </>
               )}
 

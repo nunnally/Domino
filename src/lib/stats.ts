@@ -6,6 +6,9 @@ import type {
   PairStat,
   PeriodFilter,
   Player,
+  PlayerRelationship,
+  PlayerRelationships,
+  PlayerScorePoint,
 } from './types'
 
 const percentage = (wins: number, games: number) =>

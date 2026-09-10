@@ -11,6 +11,8 @@ import { RankingsPage } from "./features/rankings/RankingsPage";
 
 import { HistoryPage } from "./features/history/HistoryPage";
 import { PlayersPage } from "./features/players/PlayersPage";
+import { PlayerComparePage } from "./features/players/PlayerComparePage";
+import { PlayerProfilePage } from "./features/players/PlayerProfilePage";
 import { HouseRulesPage } from "./features/regimento/HouseRulesPage";
 
 import { createRepository, type DominoRepository } from "./lib/repository";
@@ -37,7 +39,18 @@ const pageIds: PageId[] = [
 const pageFromHash = (): PageId => {
   const candidate = window.location.hash.replace(/^#\/?/, "");
 
+  if (candidate === "players/compare" || candidate.startsWith("players/")) {
+    return "players";
+  }
+
   return pageIds.includes(candidate as PageId) ? (candidate as PageId) : "home";
+};
+
+const playerRouteFromHash = () => {
+  const candidate = window.location.hash.replace(/^#\/?/, "");
+  if (candidate === "players/compare") return { type: "compare" as const };
+  if (candidate.startsWith("players/")) return { type: "profile" as const, playerId: candidate.slice("players/".length) };
+  return { type: "list" as const };
 };
 
 export function App({ repository: suppliedRepository }: AppProps) {
@@ -49,6 +62,7 @@ export function App({ repository: suppliedRepository }: AppProps) {
   const [games, setGames] = useState<Game[]>([]);
 
   const [page, setPage] = useState<PageId>(pageFromHash);
+  const [playerRoute, setPlayerRoute] = useState(playerRouteFromHash);
 
   const [period, setPeriod] = useState<PeriodFilter>("all");
 
@@ -107,6 +121,7 @@ export function App({ repository: suppliedRepository }: AppProps) {
   useEffect(() => {
     const syncPage = () => {
       setPage(pageFromHash());
+      setPlayerRoute(playerRouteFromHash());
     };
 
     window.addEventListener("hashchange", syncPage);
@@ -125,6 +140,13 @@ export function App({ repository: suppliedRepository }: AppProps) {
       top: 0,
       behavior: "smooth",
     });
+  };
+
+  const navigateHash = (hash: string) => {
+    window.location.hash = hash;
+    setPage(pageFromHash());
+    setPlayerRoute(playerRouteFromHash());
+    window.scrollTo?.({ top: 0, behavior: "smooth" });
   };
 
   const unlock = (pin: string) => {
@@ -268,12 +290,10 @@ const updatePlayer = async (
       )}
 
       {!loading && !error && page === "players" && (
-        <PlayersPage
-          players={players}
-          editable={unlocked}
-          onAddPlayer={addPlayer}
-          onUpdatePlayer={updatePlayer}
-        />
+        playerRoute.type === "profile" ? (() => {
+          const player = players.find((candidate) => candidate.id === playerRoute.playerId);
+          return player ? <PlayerProfilePage player={player} players={players} games={games} onBack={() => navigateHash("players")} onCompare={() => navigateHash("players/compare")} /> : <PlayersPage players={players} editable={unlocked} onAddPlayer={addPlayer} onUpdatePlayer={updatePlayer} onOpenProfile={(id) => navigateHash(`players/${id}`)} onCompare={() => navigateHash("players/compare")} />;
+        })() : playerRoute.type === "compare" ? <PlayerComparePage players={players} games={games} onBack={() => navigateHash("players")} onOpenProfile={(id) => navigateHash(`players/${id}`)} /> : <PlayersPage players={players} editable={unlocked} onAddPlayer={addPlayer} onUpdatePlayer={updatePlayer} onOpenProfile={(id) => navigateHash(`players/${id}`)} onCompare={() => navigateHash("players/compare")} />
       )}
 
       {!loading && !error && page === "history" && (
