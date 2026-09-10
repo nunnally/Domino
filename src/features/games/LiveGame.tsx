@@ -21,7 +21,10 @@ import {
 
 import { PlayerAvatar } from "../../components/PlayerAvatar";
 
-import type { Player } from "../../lib/types";
+import {
+  isGuestPlayer,
+  type Player,
+} from "../../lib/types";
 
 import {
   validateGameDraft,
@@ -610,8 +613,16 @@ export function LiveGame({
         : [],
       senaIds: [],
     };
+const guestIds = new Set(
+  players
+    .filter(isGuestPlayer)
+    .map(({ id }) => id),
+);
 
-    const errors = validateGameDraft(draft);
+const errors = validateGameDraft(draft, {
+  allowDuplicatePlayerIds: guestIds,
+});
+    
 
     if (Object.keys(errors).length > 0) {
       console.error(
@@ -719,13 +730,13 @@ export function LiveGame({
           </p>
 
           <div className="gabuada-player-options">
-            {getTeamPlayers(
-              gabuadaTeam,
-            ).map((player) => (
-              <button
-                type="button"
-                className="gabuada-player-option"
-                key={player.id}
+ {getTeamPlayers(
+  gabuadaTeam,
+).map((player, index) => (
+  <button
+    type="button"
+    className="gabuada-player-option"
+    key={`${gabuadaTeam}-${player.id}-${index}`}
                 onClick={() =>
                   registerGabuada(
                     gabuadaTeam,
