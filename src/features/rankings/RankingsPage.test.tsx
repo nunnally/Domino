@@ -6,10 +6,10 @@ import { seedGames, seedPlayers } from '../../lib/seed'
 import { RankingsPage } from './RankingsPage'
 
 describe('RankingsPage', () => {
-  it('mostra vitórias, derrotas e aproveitamento individual', () => {
+  it('mostra vitórias, derrotas e score individual', () => {
     render(<RankingsPage players={seedPlayers} games={seedGames} />)
 
-    expect(screen.getByRole('row', { name: /césar, 5 vitórias, 1 derrotas, 83.3%/i })).toBeInTheDocument()
+    expect(screen.getByRole('row', { name: /césar, 5 vitórias, 1 derrotas, score 66.3 pontos/i })).toBeInTheDocument()
   })
 
   it('mostra o ranking de gabuadas', () => {

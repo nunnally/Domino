@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowDown, Flame, Trash2 } from "lucide-react";
+import { ArrowDown, Flame, ThumbsDown } from "lucide-react";
 
 import { DominoTile } from "../../components/DominoTile";
 import { PlayerAvatar, type AvatarMood } from "../../components/PlayerAvatar";
@@ -56,7 +56,9 @@ export function RankingsPage({ players, games }: RankingsPageProps) {
 
   const [reverseOrder, setReverseOrder] = useState(false);
 
-  const individual = getIndividualStats(players, games);
+  const individual = getIndividualStats(players, games).filter(
+    (row) => row.games > 0,
+  );
 
   const pairs = getPairStats(players, games);
 
@@ -163,7 +165,7 @@ export function RankingsPage({ players, games }: RankingsPageProps) {
             </article>
 
             <article className="streak-record loss-record">
-              <div className="streak-record-title"><Trash2 size={22} /><small>Maior sequência de derrotas</small></div>
+              <div className="streak-record-title"><ThumbsDown size={22} /><small>Maior sequência de derrotas</small></div>
               <div className="streak-leaders">
                 {individualLossLeaders.map((leader) => (
                   <div className="streak-leader" key={`${leader.rank}-${leader.names}`}>
@@ -259,7 +261,7 @@ export function RankingsPage({ players, games }: RankingsPageProps) {
                         </small>
 
                         <small>
-                          <Trash2 size={13} /> Maior sequência de derrotas:{" "}
+                          <ThumbsDown size={13} /> Maior sequência de derrotas:{" "}
                           {pair.maxLossStreak}
                         </small>
                       </span>
@@ -279,7 +281,7 @@ export function RankingsPage({ players, games }: RankingsPageProps) {
                   </span>
 
                   <span className="streak-cell desktop-streak loss">
-                    <Trash2 size={17} /> {pair.maxLossStreak}
+                    <ThumbsDown size={17} /> {pair.maxLossStreak}
                   </span>
                 </div>
               );
@@ -301,7 +303,7 @@ export function RankingsPage({ players, games }: RankingsPageProps) {
             </article>
 
             <article className="streak-record loss-record">
-              <div className="streak-record-title"><Trash2 size={22} /><small>Maior sequência de derrotas</small></div>
+              <div className="streak-record-title"><ThumbsDown size={22} /><small>Maior sequência de derrotas</small></div>
               <div className="streak-leaders">
                 {pairLossLeaders.map((leader) => (
                   <div className="streak-leader" key={`${leader.rank}-${leader.names}`}>

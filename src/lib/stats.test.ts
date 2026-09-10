@@ -36,13 +36,42 @@ describe('estatísticas das sete partidas iniciais', () => {
       maxLossStreak,
     }))).toEqual([
       { name: 'César', games: 6, wins: 5, losses: 1, winRate: 83.3, maxWinStreak: 4, maxLossStreak: 1 },
+      { name: 'Joice', games: 2, wins: 2, losses: 0, winRate: 100, maxWinStreak: 2, maxLossStreak: 0 },
       { name: 'Vinícius', games: 7, wins: 5, losses: 2, winRate: 71.4, maxWinStreak: 4, maxLossStreak: 2 },
       { name: 'Gustavo', games: 6, wins: 3, losses: 3, winRate: 50, maxWinStreak: 2, maxLossStreak: 2 },
       { name: 'Machilas', games: 6, wins: 3, losses: 3, winRate: 50, maxWinStreak: 2, maxLossStreak: 2 },
-      { name: 'Joice', games: 2, wins: 2, losses: 0, winRate: 100, maxWinStreak: 2, maxLossStreak: 0 },
       { name: 'David', games: 4, wins: 0, losses: 4, winRate: 0, maxWinStreak: 0, maxLossStreak: 4 },
       { name: 'Emanoel', games: 5, wins: 0, losses: 5, winRate: 0, maxWinStreak: 0, maxLossStreak: 5 },
     ])
+  })
+
+  it('calcula score com volume, penaliza Sena perdida e marca amostras provisórias', () => {
+    const games = [
+      { ...seedGames[0], id: 'score-1', winnerIds: ['cesar', 'gustavo'] as [string, string], loserIds: ['vinicius', 'machilas'] as [string, string], senaIds: ['vinicius'] },
+      { ...seedGames[1], id: 'score-2', winnerIds: ['cesar', 'gustavo'] as [string, string], loserIds: ['vinicius', 'machilas'] as [string, string], senaIds: ['vinicius'] },
+    ]
+
+    const stats = getIndividualStats(seedPlayers, games)
+    const cesar = stats.find(({ playerId }) => playerId === 'cesar')!
+    const vinicius = stats.find(({ playerId }) => playerId === 'vinicius')!
+
+    expect(cesar.score).toBe(64.1)
+    expect(vinicius.score).toBe(35.9)
+    expect(vinicius.score).toBeLessThan(50)
+    expect(cesar.isQualified).toBe(false)
+  })
+
+  it('aplica o mínimo de jogos configurado para o ranking válido', () => {
+    const stats = getIndividualStats(seedPlayers, seedGames)
+
+    expect(stats.find(({ playerId }) => playerId === 'cesar')?.minimumGames).toBe(10)
+    expect(stats.find(({ playerId }) => playerId === 'joice')?.isQualified).toBe(false)
+  })
+
+  it('não inclui o convidado nos rankings', () => {
+    const stats = getIndividualStats(seedPlayers, seedGames)
+
+    expect(stats.some(({ name }) => name === 'Convidado')).toBe(false)
   })
 
 it('leva a frase opcional do jogador para o ranking', () => {

@@ -5,7 +5,7 @@ import { DominoTile } from '../../components/DominoTile'
 
 interface PinGateProps {
   expectedPin: string
-  onUnlock: () => void
+  onUnlock: (pin: string) => void
 }
 
 export function PinGate({ expectedPin, onUnlock }: PinGateProps) {
@@ -19,7 +19,7 @@ export function PinGate({ expectedPin, onUnlock }: PinGateProps) {
       return
     }
     setError('')
-    onUnlock()
+    onUnlock(pin)
   }
 
   return (
@@ -38,4 +38,3 @@ export function PinGate({ expectedPin, onUnlock }: PinGateProps) {
     </section>
   )
 }
-

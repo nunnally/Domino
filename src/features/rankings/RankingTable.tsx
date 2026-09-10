@@ -58,7 +58,7 @@ export function RankingTable({
         <span>Jogos</span>
         <span>V</span>
         <span>D</span>
-        <span>Aproveit.</span>
+        <span>Score</span>
       </div>
 
 {visibleRows.map(({ row, rankingIndex }) => {
@@ -75,7 +75,7 @@ export function RankingTable({
   : 'ranking-row'
             }
             role="row"
-            aria-label={`${row.name}, ${row.wins} vitórias, ${row.losses} derrotas, ${row.winRate}%`}
+            aria-label={`${row.name}, ${row.wins} vitórias, ${row.losses} derrotas, score ${row.score} pontos`}
             key={row.playerId}
           >
             <strong className="rank-number">
@@ -108,7 +108,16 @@ export function RankingTable({
             </span>
 
             <strong className="rank-rate">
-              {row.winRate}%
+              {row.score}
+              {!row.isQualified && (
+                <sup
+                  className="score-marker"
+                  aria-label="Ainda não atingiu o mínimo de jogos"
+                  title="Ainda não atingiu o mínimo de jogos"
+                >
+                  *
+                </sup>
+              )}
             </strong>
           </div>
         )

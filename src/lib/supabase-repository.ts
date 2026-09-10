@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
 import type { DominoRepository } from './repository'
+import { playerDisplayName } from './types'
 import type { Game, Player } from './types'
 
 interface PlayerRow {
@@ -28,7 +29,7 @@ interface GameRow {
 
 const toPlayer = (row: PlayerRow): Player => ({
   id: row.id,
-  name: row.name,
+  name: playerDisplayName(row),
   photoUrl: row.photo_url,
   ...(row.catchphrase === null ? {} : { catchphrase: row.catchphrase }),
   active: row.active,

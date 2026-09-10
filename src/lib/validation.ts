@@ -12,10 +12,20 @@ export interface GameDraft {
 
 export type ValidationErrors = Partial<Record<'players' | 'date' | 'score', string>>
 
-export function validateGameDraft(draft: GameDraft): ValidationErrors {
+interface GameValidationOptions {
+  allowDuplicatePlayerIds?: ReadonlySet<string>
+}
+
+export function validateGameDraft(
+  draft: GameDraft,
+  options: GameValidationOptions = {},
+): ValidationErrors {
   const ids = [...draft.winnerIds, ...draft.loserIds]
   if (ids.some((id) => !id)) return { players: 'Complete as duas duplas.' }
-  if (new Set(ids).size !== 4) return { players: 'Escolha quatro jogadores diferentes.' }
+  const duplicateIds = ids.filter((id, index) => ids.indexOf(id) !== index)
+  if (duplicateIds.some((id) => !options.allowDuplicatePlayerIds?.has(id))) {
+    return { players: 'Escolha quatro jogadores diferentes.' }
+  }
   if (!draft.playedAt || Number.isNaN(new Date(draft.playedAt).getTime())) {
     return { date: 'Informe uma data válida.' }
   }

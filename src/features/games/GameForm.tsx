@@ -3,6 +3,7 @@ import { ArrowLeft, ChevronDown, MapPin, Save } from 'lucide-react'
 
 import { DominoTile } from '../../components/DominoTile'
 import { PlayerAvatar } from '../../components/PlayerAvatar'
+import { isGuestPlayer } from '../../lib/types'
 import type { Player } from '../../lib/types'
 import { validateGameDraft, type GameDraft, type ValidationErrors } from '../../lib/validation'
 
@@ -35,7 +36,10 @@ const localDateTime = () => {
 type Slot = 'winner1' | 'winner2' | 'loser1' | 'loser2'
 
 export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame }: GameFormProps) {
-  const activePlayers = useMemo(() => players.filter(({ active }) => active), [players])
+  const activePlayers = useMemo(() => [...players]
+    .filter((player) => player.active || isGuestPlayer(player))
+    .sort((a, b) => Number(isGuestPlayer(a)) - Number(isGuestPlayer(b)) || a.name.localeCompare(b.name, 'pt-BR')),
+  [players])
   const [slots, setSlots] = useState<Record<Slot, string>>({ winner1: '', winner2: '', loser1: '', loser2: '' })
   const [gabuadaSlot, setGabuadaSlot] = useState<Slot | null>(null)
   const [senaSlot, setSenaSlot] = useState<Slot | null>(null)
@@ -74,7 +78,8 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
       gabuadaIds: gabuadaSlot && slots[gabuadaSlot] ? [slots[gabuadaSlot]] : [],
       senaIds: senaSlot && slots[senaSlot] ? [slots[senaSlot]] : [],
     }
-    const nextErrors = validateGameDraft(draft)
+    const guestIds = new Set(activePlayers.filter(isGuestPlayer).map(({ id }) => id))
+    const nextErrors = validateGameDraft(draft, { allowDuplicatePlayerIds: guestIds })
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
 
@@ -98,7 +103,9 @@ export function GameForm({ players, onSave, onCancel, locate = locateCurrentGame
   const select = (label: string, slot: Slot, bonusLabels: Array<'Gabuada' | 'Sena'>) => {
     const selected = activePlayers.find((player) => player.id === slots[slot])
     const selectedIds = new Set(Object.values(slots).filter(Boolean))
-    const selectablePlayers = activePlayers.filter((player) => player.id === slots[slot] || !selectedIds.has(player.id))
+    const selectablePlayers = activePlayers.filter((player) =>
+      isGuestPlayer(player) || player.id === slots[slot] || !selectedIds.has(player.id),
+    )
 
     return (
       <div className="player-select">

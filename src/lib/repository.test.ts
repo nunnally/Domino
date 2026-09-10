@@ -16,7 +16,7 @@ describe('local repository', () => {
   it('inicializa os jogadores e partidas históricas', async () => {
     const repository = createLocalRepository(createMemoryStorage())
 
-    expect(await repository.listPlayers()).toHaveLength(7)
+    expect(await repository.listPlayers()).toHaveLength(8)
     expect(await repository.listGames()).toHaveLength(9)
   })
 

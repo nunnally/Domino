@@ -1,4 +1,4 @@
-import { ArrowRight, Medal } from "lucide-react";
+import { ArrowRight, Crown, Medal, Trophy } from "lucide-react";
 
 import { DominoTile } from "../../components/DominoTile";
 import { PlayerAvatar } from "../../components/PlayerAvatar";
@@ -48,25 +48,31 @@ export function Dashboard({
   const pairs = getPairStats(players, periodGames);
   const rivalries = getHeadToHeadStats(players, periodGames);
 
+  const validIndividuals = individuals.filter(({ isQualified }) => isQualified);
+  const podiumPlayers = [
+    validIndividuals[1],
+    validIndividuals[0],
+    validIndividuals[2],
+  ].filter(
+    (player): player is (typeof validIndividuals)[number] => Boolean(player),
+  );
   const leader = individuals[0];
 
   const leaderPlayers = leader
     ? individuals.filter(
         (player) =>
-          player.wins === leader.wins &&
-          player.winRate === leader.winRate &&
-          player.losses === leader.losses,
+          player.score === leader.score &&
+          player.isQualified === leader.isQualified,
       )
     : [];
 
-  const lastPlayer = individuals.at(-1);
+  const lastPlayer = validIndividuals.at(-1);
 
   const lanternPlayers = lastPlayer
-    ? individuals.filter(
+    ? validIndividuals.filter(
         (player) =>
-          player.wins === lastPlayer.wins &&
-          player.winRate === lastPlayer.winRate &&
-          player.losses === lastPlayer.losses,
+          player.score === lastPlayer.score &&
+          player.isQualified === lastPlayer.isQualified,
       )
     : [];
 
@@ -170,6 +176,80 @@ export function Dashboard({
             </div>
           </section>
 
+          {validIndividuals.length > 0 && (
+            <section className="panel podium-panel" aria-label="Líderes do dominó">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">Pódio da mesa</p>
+                  <h2 className="podium-heading-title">
+                    <Trophy aria-hidden="true" size={26} strokeWidth={2.5} />
+                    Líderes do dominó
+                  </h2>
+                </div>
+              </div>
+
+              <div className="podium-grid">
+                {podiumPlayers.map((player) => {
+                  const place = validIndividuals.indexOf(player) + 1;
+
+                  return (
+                    <article
+                      className={`podium-card podium-place-${place}`}
+                      key={player.playerId}
+                      aria-label={`${place}º lugar: ${player.name}, score ${player.score}`}
+                    >
+                      <div className="podium-profile">
+                        <div className="podium-avatar-wrap">
+                          {player.catchphrase && (
+                            <span className="sticker sticker-yellow podium-phrase-sticker">
+                              <Trophy size={14} />
+                              {player.catchphrase}
+                            </span>
+                          )}
+
+                          <span
+                            className="podium-crown-wrap"
+                            aria-hidden="true"
+                          >
+                            <Crown
+                              className="podium-crown podium-crown-floating"
+                              strokeWidth={2.5}
+                            />
+                          </span>
+
+                          <PlayerAvatar
+                            name={player.name}
+                            photoUrl={player.photoUrl}
+                            className="podium-avatar"
+                            mood={place === 1 ? "champion" : "happy"}
+                          />
+                        </div>
+
+                        <div className="podium-details">
+                          {place === 1 && (
+                            <p className="podium-kicker">Líder individual</p>
+                          )}
+                          <strong>{player.name}</strong>
+                          <small className="podium-record">
+                            {player.wins}V · {player.losses}D
+                          </small>
+                          <span className="podium-score">{player.score}</span>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+
+              <DominoTile
+                left={4}
+                right={1}
+                className="podium-domino"
+                label="Peça de dominó quatro um"
+              />
+            </section>
+          )}
+
           <div className="dashboard-grid">
             <section className="panel ranking-panel">
               <div className="section-heading">
@@ -193,7 +273,7 @@ export function Dashboard({
             <aside className="side-stack">
               <section className="panel pair-card">
                 <span className="sticker sticker-violet">
-                  <Medal size={16} /> Líderes do dominó
+                  <Medal size={16} /> Melhor dupla
                 </span>
 
                 <div className="pair-avatars">

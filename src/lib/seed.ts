@@ -10,6 +10,7 @@ export const seedPlayers: Player[] = [
   { id: 'david', name: 'David', photoUrl: 'https://api.dicebear.com/10.x/thumbs/svg?seed=David', active: true, createdAt },
   { id: 'emanoel', name: 'Emanoel', photoUrl: 'https://api.dicebear.com/10.x/thumbs/svg?seed=Emanoel', active: true, createdAt },
   { id: 'joice', name: 'Joice', photoUrl: 'assets/joice.jpg', active: true, createdAt },
+  { id: 'convidado', name: 'Convidado', photoUrl: 'https://api.dicebear.com/10.x/thumbs/svg?seed=Convidado', active: false, createdAt },
 ]
 
 const seedGame = (

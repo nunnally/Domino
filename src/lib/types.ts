@@ -9,6 +9,12 @@ export interface Player {
   createdAt: string
 }
 
+export const isGuestPlayer = (player: Pick<Player, 'id' | 'name'>) =>
+  player.id === 'convidado' || player.name.trim().toLocaleLowerCase('pt-BR').startsWith('convidado')
+
+export const playerDisplayName = (player: Pick<Player, 'id' | 'name'>) =>
+  isGuestPlayer(player) ? 'Convidado' : player.name
+
 export interface Game {
   id: string
   playedAt: string
@@ -34,6 +40,9 @@ export interface IndividualStat {
   gabuadas: number
   senas: number
   winRate: number
+  score: number
+  minimumGames: number
+  isQualified: boolean
   maxWinStreak: number
   maxLossStreak: number
 }

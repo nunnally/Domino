@@ -28,6 +28,25 @@ describe('GameForm', () => {
     })
   })
 
+  it('permite repetir o convidado em uma partida', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<GameForm players={seedPlayers} onSave={onSave} onCancel={() => {}} locate={async () => undefined} />)
+
+    await user.selectOptions(screen.getByLabelText('Vencedor 1'), 'cesar')
+    await user.selectOptions(screen.getByLabelText('Vencedor 2'), 'convidado')
+    await user.selectOptions(screen.getByLabelText('Perdedor 1'), 'david')
+    await user.selectOptions(screen.getByLabelText('Perdedor 2'), 'convidado')
+    await user.click(screen.getByRole('button', { name: /salvar partida/i }))
+
+    await waitFor(() => {
+      expect(onSave).toHaveBeenCalledWith(expect.objectContaining({
+        winnerIds: ['cesar', 'convidado'],
+        loserIds: ['david', 'convidado'],
+      }))
+    })
+  })
+
   it('salva normalmente quando a localização não está disponível', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()

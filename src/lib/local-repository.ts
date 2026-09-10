@@ -1,5 +1,6 @@
 import { seedGames, seedPlayers } from './seed'
 import type { DominoRepository } from './repository'
+import { isGuestPlayer, playerDisplayName } from './types'
 import type { Game, Player } from './types'
 
 const PLAYERS_KEY = 'domino-zaaaap:players:v1'
@@ -26,6 +27,10 @@ export function createLocalRepository(storage: StorageLike): DominoRepository {
     const players = read<Player[]>(PLAYERS_KEY, seedPlayers)
     let migrated = false
     let nextPlayers = players.map((player) => {
+      if (isGuestPlayer(player) && player.name !== 'Convidado') {
+        migrated = true
+        return { ...player, name: playerDisplayName(player) }
+      }
       if (player.id === 'cesar' && player.catchphrase === undefined) {
         migrated = true
         return { ...player, catchphrase: 'O bem prevalece.' }
@@ -44,6 +49,13 @@ export function createLocalRepository(storage: StorageLike): DominoRepository {
       const joice = seedPlayers.find((player) => player.id === 'joice')
       if (joice) {
         nextPlayers = [...nextPlayers, joice]
+        migrated = true
+      }
+    }
+    if (!nextPlayers.some(isGuestPlayer)) {
+      const guest = seedPlayers.find(isGuestPlayer)
+      if (guest) {
+        nextPlayers = [...nextPlayers, guest]
         migrated = true
       }
     }

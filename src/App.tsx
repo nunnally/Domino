@@ -21,6 +21,9 @@ interface AppProps {
   repository?: DominoRepository;
 }
 
+const SHARED_PIN = import.meta.env.VITE_SHARED_PIN || "1234";
+const SAVED_PIN_KEY = "domino-zaaaap:shared-pin:v1";
+
 const pageIds: PageId[] = [
   "home",
   "rankings",
@@ -52,9 +55,13 @@ export function App({ repository: suppliedRepository }: AppProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [unlocked, setUnlocked] = useState(
-    () => sessionStorage.getItem("domino-zaaaap:unlocked") === "yes",
-  );
+  const [unlocked, setUnlocked] = useState(() => {
+    try {
+      return localStorage.getItem(SAVED_PIN_KEY) === SHARED_PIN;
+    } catch {
+      return false;
+    }
+  });
 
   const loadData = useCallback(async (activeRepository: DominoRepository) => {
     setLoading(true);
@@ -120,9 +127,12 @@ export function App({ repository: suppliedRepository }: AppProps) {
     });
   };
 
-  const unlock = () => {
-    sessionStorage.setItem("domino-zaaaap:unlocked", "yes");
-
+  const unlock = (pin: string) => {
+    try {
+      localStorage.setItem(SAVED_PIN_KEY, pin);
+    } catch {
+      // O desbloqueio continua válido nesta sessão mesmo se o storage estiver indisponível.
+    }
     setUnlocked(true);
   };
 
@@ -236,7 +246,7 @@ const updatePlayer = async (
 
       {!loading && !error && page === "new-game" && !unlocked && (
         <PinGate
-          expectedPin={import.meta.env.VITE_SHARED_PIN || "1234"}
+          expectedPin={SHARED_PIN}
           onUnlock={unlock}
         />
       )}

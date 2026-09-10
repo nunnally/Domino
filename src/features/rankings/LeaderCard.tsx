@@ -65,11 +65,11 @@ export function LeaderCard({ players }: LeaderCardProps) {
 
         <div className="leader-score">
           <span className="leader-info-enter leader-score-enter">
-            {leader.winRate}%
+            {leader.score}
           </span>
 
           <small className="leader-info-enter leader-score-label-enter">
-            de aproveitamento
+            score
           </small>
         </div>
 
@@ -128,11 +128,11 @@ export function LeaderCard({ players }: LeaderCardProps) {
 
       <div className="leader-score">
         <span className="leader-info-enter leader-score-enter">
-          {reference.winRate}%
+          {reference.score}
         </span>
 
         <small className="leader-info-enter leader-score-label-enter">
-          de aproveitamento
+          score
         </small>
       </div>
 

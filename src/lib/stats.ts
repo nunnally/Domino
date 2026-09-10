@@ -1,3 +1,4 @@
+import { isGuestPlayer } from './types'
 import type {
   Game,
   HeadToHeadStat,
@@ -10,7 +11,42 @@ import type {
 const percentage = (wins: number, games: number) =>
   games === 0 ? 0 : Number(((wins / games) * 100).toFixed(1))
 
-const playerMap = (players: Player[]) => new Map(players.map((player) => [player.id, player]))
+const SCORE_SENA_WEIGHT = 0.05
+const SCORE_POINTS_PER_STANDARD_DEVIATION = 10
+
+// Mínimo de partidas para entrar no ranking válido
+export const RANKING_MINIMUM_GAMES = 10
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
+
+const scoreFromRecord = (wins: number, games: number, lostSenas: number) => {
+  if (games === 0) return 0
+
+  const adjustedWinRate = clamp((wins - SCORE_SENA_WEIGHT * lostSenas) / games, 0, 1)
+  const zScore = (adjustedWinRate - 0.5) / Math.sqrt(0.25 / games)
+  return Number(clamp(50 + SCORE_POINTS_PER_STANDARD_DEVIATION * zScore, 0, 100).toFixed(1))
+}
+
+const minimumGamesForRanking = (gameCounts: number[]) =>
+  gameCounts.some((games) => games > 0) ? RANKING_MINIMUM_GAMES : 0
+
+/*
+ * Fórmula dinâmica anterior (mantida como referência):
+ *
+ * const topVolumes = [...gameCounts]
+ *   .filter((games) => games > 0)
+ *   .sort((a, b) => b - a)
+ *   .slice(0, 4)
+ * const mediaDosQuatroMaiores =
+ *   topVolumes.reduce((sum, games) => sum + games, 0) / topVolumes.length
+ * const minimo = Math.ceil(mediaDosQuatroMaiores * 0.8)
+ *
+ * Ou seja: o jogador precisava ter pelo menos 80% da média de partidas
+ * dos quatro jogadores com maior volume. Com os dados atuais, isso dava 25.
+ */
+
+const playerMap = (players: Player[]) =>
+  new Map(players.filter((player) => !isGuestPlayer(player)).map((player) => [player.id, player]))
 
 const canonicalPair = (ids: [string, string]) => [...ids].sort() as [string, string]
 
@@ -43,6 +79,8 @@ export function getIndividualStats(players: Player[], games: Game[]): Individual
   const stats = new Map<string, IndividualStat>()
 
   for (const player of players) {
+    if (isGuestPlayer(player)) continue
+
     stats.set(player.id, {
       playerId: player.id,
       name: player.name,
@@ -54,12 +92,16 @@ export function getIndividualStats(players: Player[], games: Game[]): Individual
       gabuadas: 0,
       senas: 0,
       winRate: 0,
+      score: 0,
+      minimumGames: 0,
+      isQualified: false,
       maxWinStreak: 0,
       maxLossStreak: 0,
     })
   }
 
   const streaks = new Map<string, Streak>()
+  const lostSenas = new Map<string, number>()
   const chronologicalGames = [...games].sort(compareChronologically)
   for (const game of chronologicalGames) {
     for (const id of game.winnerIds) {
@@ -85,12 +127,30 @@ export function getIndividualStats(players: Player[], games: Game[]): Individual
     for (const id of game.senaIds ?? []) {
       const stat = stats.get(id)
       if (stat) stat.senas += 1
+
+      if (game.loserIds.includes(id)) {
+        lostSenas.set(id, (lostSenas.get(id) ?? 0) + 1)
+      }
     }
   }
 
+  const minimumGames = minimumGamesForRanking([...stats.values()].map((stat) => stat.games))
+
   return [...stats.values()]
-    .map((stat) => ({ ...stat, winRate: percentage(stat.wins, stat.games) }))
-    .sort((a, b) => compareByRank(a, b) || a.name.localeCompare(b.name, 'pt-BR'))
+    .map((stat) => ({
+      ...stat,
+      winRate: percentage(stat.wins, stat.games),
+      score: scoreFromRecord(stat.wins, stat.games, lostSenas.get(stat.playerId) ?? 0),
+      minimumGames,
+      isQualified: stat.games >= minimumGames && stat.games > 0,
+    }))
+    .sort((a, b) =>
+      Number(b.isQualified) - Number(a.isQualified)
+      || b.score - a.score
+      || b.games - a.games
+      || compareByRank(a, b)
+      || a.name.localeCompare(b.name, 'pt-BR'),
+    )
 }
 
 export function getPairStats(players: Player[], games: Game[]): PairStat[] {
