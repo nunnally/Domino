@@ -37,7 +37,7 @@ const pageIds: PageId[] = [
 ];
 
 const pageFromHash = (): PageId => {
-  const candidate = window.location.hash.replace(/^#\/?/, "");
+  const candidate = window.location.hash.replace(/^#\/?/, "").split("?")[0];
 
   if (candidate === "players/compare" || candidate.startsWith("players/")) {
     return "players";
@@ -48,7 +48,10 @@ const pageFromHash = (): PageId => {
 
 const playerRouteFromHash = () => {
   const candidate = window.location.hash.replace(/^#\/?/, "");
-  if (candidate === "players/compare") return { type: "compare" as const };
+  if (candidate.startsWith("players/compare")) {
+    const query = candidate.split("?")[1];
+    return { type: "compare" as const, initialPlayerId: query || undefined };
+  }
   if (candidate.startsWith("players/")) return { type: "profile" as const, playerId: candidate.slice("players/".length) };
   return { type: "list" as const };
 };
@@ -292,8 +295,8 @@ const updatePlayer = async (
       {!loading && !error && page === "players" && (
         playerRoute.type === "profile" ? (() => {
           const player = players.find((candidate) => candidate.id === playerRoute.playerId);
-          return player ? <PlayerProfilePage player={player} players={players} games={games} onBack={() => navigateHash("players")} onCompare={() => navigateHash("players/compare")} /> : <PlayersPage players={players} editable={unlocked} onAddPlayer={addPlayer} onUpdatePlayer={updatePlayer} onOpenProfile={(id) => navigateHash(`players/${id}`)} onCompare={() => navigateHash("players/compare")} />;
-        })() : playerRoute.type === "compare" ? <PlayerComparePage players={players} games={games} onBack={() => navigateHash("players")} onOpenProfile={(id) => navigateHash(`players/${id}`)} /> : <PlayersPage players={players} editable={unlocked} onAddPlayer={addPlayer} onUpdatePlayer={updatePlayer} onOpenProfile={(id) => navigateHash(`players/${id}`)} onCompare={() => navigateHash("players/compare")} />
+          return player ? <PlayerProfilePage player={player} players={players} games={games} onBack={() => navigateHash("players")} onCompare={() => navigateHash(`players/compare?${player.id}`)} /> : <PlayersPage players={players} editable={unlocked} onAddPlayer={addPlayer} onUpdatePlayer={updatePlayer} onOpenProfile={(id) => navigateHash(`players/${id}`)} onCompare={() => navigateHash("players/compare")} />;
+        })() : playerRoute.type === "compare" ? <PlayerComparePage players={players} games={games} initialPlayerIds={playerRoute.initialPlayerId ? [playerRoute.initialPlayerId] : []} onBack={() => navigateHash("players")} onOpenProfile={(id) => navigateHash(`players/${id}`)} /> : <PlayersPage players={players} editable={unlocked} onAddPlayer={addPlayer} onUpdatePlayer={updatePlayer} onOpenProfile={(id) => navigateHash(`players/${id}`)} onCompare={() => navigateHash("players/compare")} />
       )}
 
       {!loading && !error && page === "history" && (
