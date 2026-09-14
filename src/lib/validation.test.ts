@@ -21,6 +21,14 @@ describe('validateGameDraft', () => {
     })).toEqual({ players: 'Escolha quatro jogadores diferentes.' })
   })
 
+  it('aceita convidado repetido quando explicitamente liberado', () => {
+    expect(validateGameDraft({
+      ...validDraft,
+      winnerIds: ['cesar', 'convidado'],
+      loserIds: ['david', 'convidado'],
+    }, { allowDuplicatePlayerIds: new Set(['convidado']) })).toEqual({})
+  })
+
   it('rejeita campos de jogador vazios', () => {
     expect(validateGameDraft({
       ...validDraft,
@@ -36,4 +44,3 @@ describe('validateGameDraft', () => {
     })).toHaveProperty('score', 'O placar vencedor precisa ser maior.')
   })
 })
-
