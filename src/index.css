@@ -6744,3 +6744,129 @@ input:focus-visible {
     animation: none !important;
   }
 }
+
+
+/* Balões do pódio no mobile. */
+
+.podium-panel .podium-mobile-phrase-slot {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .podium-panel .podium-grid {
+    align-items: start;
+    padding: 20px 10px 24px;
+  }
+
+  .podium-panel .podium-grid .podium-card {
+    padding-top: 0;
+  }
+
+  .podium-panel .podium-profile {
+    grid-template-rows: auto 86px auto;
+    align-items: start;
+  }
+
+  .podium-panel .podium-mobile-phrase-slot {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    min-height: 64px;
+    margin-bottom: 46px;
+  }
+
+  .podium-panel .podium-mobile-phrase {
+    position: relative;
+    width: calc(100% - 4px);
+    max-width: calc(100% - 4px);
+    min-width: 0;
+    min-height: 44px;
+    padding: 7px 5px;
+    border: 2px solid var(--ink);
+    box-shadow: 2px 2px 0 var(--ink);
+    font-size: 12px;
+    line-height: 1.35;
+    text-transform: none;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    transform: none;
+    cursor: pointer;
+  }
+
+  .podium-panel .podium-mobile-phrase::after {
+    content: "";
+    position: absolute;
+    bottom: -7px;
+    left: calc(50% - 5px);
+    width: 10px;
+    height: 10px;
+    border-right: 2px solid var(--ink);
+    border-bottom: 2px solid var(--ink);
+    background: inherit;
+    transform: rotate(45deg);
+  }
+
+  .podium-panel .podium-mobile-phrase > span {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .podium-panel .podium-mobile-phrase[aria-expanded="true"] > span {
+    display: block;
+    overflow: visible;
+  }
+
+  .podium-panel .podium-place-2 .podium-mobile-phrase {
+    background: #e7e4f7;
+  }
+
+  .podium-panel .podium-place-3 .podium-mobile-phrase {
+    background: #f0c7a8;
+  }
+
+  .podium-panel .podium-avatar-wrap {
+    align-self: end;
+  }
+
+  .podium-panel .podium-phrase-sticker {
+    display: none;
+  }
+
+
+}
+.form-heading > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.form-heading > .domino-tile {
+  flex-shrink: 0;
+}
+
+@media (max-width: 700px) {
+  .form-heading {
+    gap: 12px;
+    padding-right: 5px;
+  }
+
+  .form-heading > .domino-tile {
+    width: 72px;
+    height: 40px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .form-heading > .domino-tile .domino-half {
+    min-width: 0;
+    min-height: 0;
+    padding: 4px;
+  }
+
+  .form-heading > .domino-tile .domino-pip {
+    width: 5px;
+    height: 5px;
+  }
+}

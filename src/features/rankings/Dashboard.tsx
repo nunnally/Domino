@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ArrowRight, Crown, Medal, Trophy } from "lucide-react";
 
 import { DominoTile } from "../../components/DominoTile";
@@ -39,6 +40,11 @@ export function Dashboard({
   onShowRankings,
   onNewGame,
 }: DashboardProps) {
+  const [phraseSelection, setPhraseSelection] = useState<{
+    period: PeriodFilter;
+    playerId: string;
+    expanded: boolean;
+  } | null>(null);
   const periodGames = filterGamesByPeriod(games, period);
 
   const individuals = getIndividualStats(players, periodGames).filter(
@@ -191,6 +197,8 @@ export function Dashboard({
               <div className="podium-grid">
                 {podiumPlayers.map((player) => {
                   const place = validIndividuals.indexOf(player) + 1;
+                  const phraseExpanded = phraseSelection?.playerId === player.playerId &&
+                    phraseSelection?.period === period && phraseSelection.expanded;
 
                   return (
                     <article
@@ -199,6 +207,21 @@ export function Dashboard({
                       aria-label={`${place}º lugar: ${player.name}, score ${player.score}`}
                     >
                       <div className="podium-profile">
+                        <div className="podium-mobile-phrase-slot">
+                          {player.catchphrase && (
+                            <button
+                              type="button"
+                              className="sticker sticker-yellow podium-mobile-phrase"
+                              aria-label={`${phraseExpanded ? "Recolher" : "Ler"} frase de ${player.name}: ${player.catchphrase}`}
+                              aria-expanded={Boolean(phraseExpanded)}
+                              onClick={() => setPhraseSelection({
+                                period, playerId: player.playerId, expanded: !phraseExpanded,
+                              })}
+                            >
+                              <span>{player.catchphrase}</span>
+                            </button>
+                          )}
+                        </div>
                         <div className="podium-avatar-wrap">
                           {player.catchphrase && (
                             <span className="sticker sticker-yellow podium-phrase-sticker">
