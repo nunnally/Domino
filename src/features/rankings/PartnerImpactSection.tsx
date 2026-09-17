@@ -53,21 +53,27 @@ function ImpactBoard({
   )
 }
 
-export function PartnerImpactSection({ positive, negative }: PartnerImpactSectionProps) {
-  return (
-    <section className="partner-impact-section" aria-labelledby="partner-impact-title">
-      <header className="partner-impact-heading">
-        <div>
-          <span className="partner-impact-label">O efeito de sentar ao lado</span>
-          <h2 id="partner-impact-title">Put your name <span>in the skin.</span></h2>
-        </div>
-        <p>Quem muda a sorte da dupla?</p>
-      </header>
-      <div className="impact-board-grid">
-        <ImpactBoard rows={positive} direction="positive" />
-        <ImpactBoard rows={negative} direction="negative" />
-      </div>
-      <p className="impact-note">Mínimo de {PARTNER_IMPACT_MINIMUM_GAMES} jogos comparáveis e {PARTNER_IMPACT_MINIMUM_PARTNERS} duplas. Comparamos a taxa de vitória dos parceiros com e sem a pessoa; p.p. = pontos percentuais.</p>
-    </section>
-  )
-}
+// export function PartnerImpactSection({ positive, negative }: PartnerImpactSectionProps) {
+//   return (
+//     <section className="partner-impact-section" aria-labelledby="partner-impact-title">
+
+//       <header className="partner-impact-heading">
+//         <div>
+//           <span className="partner-impact-label">O efeito de sentar ao lado</span>
+//                            <p>Quem muda a sorte da dupla? Pessoas que impactam positivamente ou negativamente a dupla.</p>
+
+
+//           <h2 id="partner-impact-title">Put your name <span>in the sky.</span></h2>
+//         </div>
+
+//         <h2>Melhor evitar!!!?</h2>
+        
+//       </header>
+//       <div className="impact-board-grid">
+//         <ImpactBoard rows={positive} direction="positive" />
+//         <ImpactBoard rows={negative} direction="negative" />
+//       </div>
+//       <p className="impact-note">Mínimo de {PARTNER_IMPACT_MINIMUM_GAMES} jogos comparáveis e {PARTNER_IMPACT_MINIMUM_PARTNERS} duplas. Comparamos a taxa de vitória dos parceiros com e sem a pessoa; p.p. = pontos percentuais.</p>
+//     </section>
+//   )
+// }

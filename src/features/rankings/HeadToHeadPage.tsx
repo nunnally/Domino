@@ -25,7 +25,7 @@ export function HeadToHeadPage({ players, games }: HeadToHeadPageProps) {
         <DominoTile left={5} right={5} label="Bucha de cinco" />
       </header>
 
-      <PartnerImpactSection positive={impactRankings.positive} negative={impactRankings.negative} />
+      {/* <PartnerImpactSection positive={impactRankings.positive} negative={impactRankings.negative} /> */}
 
       <div className="matchup-grid">
         {matchups.map((matchup, index) => {
