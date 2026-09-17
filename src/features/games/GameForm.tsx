@@ -574,7 +574,7 @@ export function GameForm({
           </fieldset>
         </section>
 
-        <p className="location-note">
+        <p className="p-2 location-note">
           <MapPin size={17} />
           Ao salvar, tentaremos incluir o local da partida.
         </p>
