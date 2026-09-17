@@ -1,7 +1,8 @@
 import { Swords } from 'lucide-react'
 
 import { DominoTile } from '../../components/DominoTile'
-import { getHeadToHeadStats, getPartnerImpactRankings } from '../../lib/stats'
+// import { getHeadToHeadStats, getPartnerImpactRankings } from '../../lib/stats'
+import { getHeadToHeadStats } from '../../lib/stats'
 import type { Game, Player } from '../../lib/types'
 // import { PartnerImpactSection } from './PartnerImpactSection'
 
