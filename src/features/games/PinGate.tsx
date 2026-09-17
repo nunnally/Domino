@@ -16,7 +16,7 @@ export function PinGate({ expectedPin, onUnlock }: PinGateProps) {
     event.preventDefault()
     if (pin === '242424') {
 
-      let audio = new Audio('https://www.myinstants.com/media/sounds/eu-vou-safado.mp3')
+      const audio = new Audio('https://www.myinstants.com/media/sounds/eu-vou-safado.mp3')
       audio.play()
       setError('PIN secreto ainda não faz nada! ')
       return
