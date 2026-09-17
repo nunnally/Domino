@@ -36,7 +36,7 @@ const ministers = [
   {
     id: 'vinicius',
     name: 'Vinícius',
-    role: 'Ministro dos Recursos',
+    role: 'Ministro da Justiça',
     note: 'Sempre cabe mais uma.',
     crop: '2% 29%',
   },
