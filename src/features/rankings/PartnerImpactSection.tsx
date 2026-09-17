@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { ArrowDownRight, ArrowUpRight } from 'lucide-react'
 
 import { PlayerAvatar } from '../../components/PlayerAvatar'
