@@ -20,6 +20,8 @@ const SCORE_POINTS_PER_STANDARD_DEVIATION = 10
 
 // Mínimo de partidas para entrar no ranking válido
 export const RANKING_MINIMUM_GAMES = 10
+export const PARTNER_IMPACT_MINIMUM_GAMES = 10
+export const PARTNER_IMPACT_MINIMUM_PARTNERS = 2
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
@@ -479,7 +481,10 @@ export function getPartnerImpactRankings(
       partnerCount += 1
     }
 
-    if (comparedGames === 0) continue
+    if (
+      comparedGames < PARTNER_IMPACT_MINIMUM_GAMES
+      || partnerCount < PARTNER_IMPACT_MINIMUM_PARTNERS
+    ) continue
 
     // Quatro jogos virtuais reduzem o peso de amostras pequenas.
     const impactPercentagePoints = Number((100 * excessWins / (comparedGames + 4)).toFixed(1))

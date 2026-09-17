@@ -17,28 +17,41 @@ describe('impacto de um jogador sobre seus parceiros', () => {
     const games = [
       ...Array.from({ length: 6 }, (_, index) => game(`with-${index}`, ['cesar', 'vinicius'], ['machilas', 'gustavo'])),
       ...Array.from({ length: 6 }, (_, index) => game(`without-${index}`, ['machilas', 'gustavo'], ['emanoel', 'vinicius'])),
+      ...Array.from({ length: 6 }, (_, index) => game(`with-second-${index}`, ['cesar', 'david'], ['machilas', 'gustavo'])),
+      ...Array.from({ length: 6 }, (_, index) => game(`without-second-${index}`, ['machilas', 'gustavo'], ['emanoel', 'david'])),
+      game('guest', ['convidado', 'joice'], ['machilas', 'gustavo']),
     ]
 
     const rankings = getPartnerImpactRankings(seedPlayers, games)
 
-    expect(rankings.positive[0]).toMatchObject({ playerId: 'cesar', comparedGames: 6, partnerCount: 1 })
-    expect(rankings.positive[0].impactPercentagePoints).toBe(48)
-    expect(rankings.negative[0]).toMatchObject({ playerId: 'emanoel', comparedGames: 6, partnerCount: 1 })
-    expect(rankings.negative[0].impactPercentagePoints).toBe(-48)
+    expect(rankings.positive[0]).toMatchObject({ playerId: 'cesar', comparedGames: 12, partnerCount: 2 })
+    expect(rankings.positive[0].impactPercentagePoints).toBe(60)
+    expect(rankings.negative[0]).toMatchObject({ playerId: 'emanoel', comparedGames: 12, partnerCount: 2 })
+    expect(rankings.negative[0].impactPercentagePoints).toBe(-60)
     expect(rankings.positive).toHaveLength(1)
     expect(rankings.negative).toHaveLength(1)
     expect(rankings.positive.every((row) => !rankings.negative.some((other) => other.playerId === row.playerId))).toBe(true)
+    expect([...rankings.positive, ...rankings.negative].some((row) => row.playerId === 'convidado')).toBe(false)
   })
 
-  it('reduz o efeito de poucos jogos e ignora convidados ou parceiros sem histórico comparável', () => {
-    const rankings = getPartnerImpactRankings(seedPlayers, [
-      game('with', ['cesar', 'vinicius'], ['machilas', 'gustavo']),
-      game('without', ['machilas', 'gustavo'], ['emanoel', 'vinicius']),
-      game('guest', ['convidado', 'joice'], ['david', 'cesar']),
-    ])
+  it('exige 10 jogos comparáveis e duas duplas distintas', () => {
+    const onlyOnePartner = [
+      ...Array.from({ length: 10 }, (_, index) => game(`with-${index}`, ['cesar', 'vinicius'], ['machilas', 'gustavo'])),
+      ...Array.from({ length: 10 }, (_, index) => game(`without-${index}`, ['machilas', 'gustavo'], ['emanoel', 'vinicius'])),
+    ]
+    const nineGamesTwoPartners = [
+      ...Array.from({ length: 5 }, (_, index) => game(`with-a-${index}`, ['cesar', 'vinicius'], ['machilas', 'gustavo'])),
+      ...Array.from({ length: 5 }, (_, index) => game(`without-a-${index}`, ['machilas', 'gustavo'], ['emanoel', 'vinicius'])),
+      ...Array.from({ length: 4 }, (_, index) => game(`with-b-${index}`, ['cesar', 'david'], ['machilas', 'gustavo'])),
+      ...Array.from({ length: 4 }, (_, index) => game(`without-b-${index}`, ['machilas', 'gustavo'], ['emanoel', 'david'])),
+    ]
 
-    expect(rankings.positive.find((row) => row.playerId === 'cesar')?.impactPercentagePoints).toBe(12)
-    expect(rankings.negative.find((row) => row.playerId === 'emanoel')?.impactPercentagePoints).toBe(-12)
-    expect([...rankings.positive, ...rankings.negative].some((row) => row.playerId === 'convidado')).toBe(false)
+    expect(getPartnerImpactRankings(seedPlayers, onlyOnePartner).positive).toEqual([])
+    expect(getPartnerImpactRankings(seedPlayers, nineGamesTwoPartners).positive).toEqual([])
+    expect(getPartnerImpactRankings(seedPlayers, [
+      ...nineGamesTwoPartners,
+      game('tenth-a', ['cesar', 'david'], ['machilas', 'gustavo']),
+      game('tenth-b', ['machilas', 'gustavo'], ['emanoel', 'david']),
+    ]).positive[0]).toMatchObject({ playerId: 'cesar', comparedGames: 10, partnerCount: 2 })
   })
 })
