@@ -174,7 +174,7 @@ export function GameForm({
       ...(winnerScore === ""
         ? {}
         : {
-            winnerScore: Number(winnerScore),
+            winnerScore:  gabuadaSlot !== null ? Number(4) : Number(winnerScore),
           }),
 
       ...(loserScore === ""
@@ -196,6 +196,8 @@ export function GameForm({
       allowDuplicatePlayerIds: guestIds,
     });
 
+    // alert("Teste da pontuação de gabuada: " + draft.winnerScore);
+    // return ;
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) {
