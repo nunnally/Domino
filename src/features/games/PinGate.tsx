@@ -14,8 +14,16 @@ export function PinGate({ expectedPin, onUnlock }: PinGateProps) {
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
+    if (pin === '242424') {
+
+      let audio = new Audio('https://www.myinstants.com/media/sounds/eu-vou-safado.mp3')
+      audio.play()
+      setError('PIN secreto ainda não faz nada! ')
+      return
+      
+    }
     if (pin !== expectedPin) {
-      setError('PIN errado. Pergunte para alguém da diretoria.')
+      setError('PIN errado. Pergunte para algum Ministro.')
       return
     }
     setError('')
