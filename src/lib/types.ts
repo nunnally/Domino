@@ -98,3 +98,12 @@ export interface PlayerRelationships {
   mostLossesWith: PlayerRelationship[]
   mostWinsAgainst: PlayerRelationship[]
 }
+
+export interface PartnerImpactStat {
+  playerId: string
+  name: string
+  photoUrl: string
+  impactPercentagePoints: number
+  comparedGames: number
+  partnerCount: number
+}

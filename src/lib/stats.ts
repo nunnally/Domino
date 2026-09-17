@@ -4,6 +4,7 @@ import type {
   HeadToHeadStat,
   IndividualStat,
   PairStat,
+  PartnerImpactStat,
   PeriodFilter,
   Player,
   PlayerRelationship,
@@ -417,6 +418,93 @@ export function getHeadToHeadStats(players: Player[], games: Game[]): HeadToHead
       }
     })
     .sort((a, b) => b.games - a.games || a.matchupKey.localeCompare(b.matchupKey, 'pt-BR'))
+}
+
+export function getPartnerImpactRankings(
+  players: Player[],
+  games: Game[],
+): { positive: PartnerImpactStat[]; negative: PartnerImpactStat[] } {
+  const eligiblePlayers = playerMap(players)
+  const totals = new Map<string, { games: number; wins: number }>()
+  const pairs = new Map<string, { games: number; wins: number }>()
+
+  const addTeam = (ids: [string, string], won: boolean) => {
+    const realIds = [...new Set(ids)].filter((id) => eligiblePlayers.has(id))
+
+    for (const id of realIds) {
+      const record = totals.get(id) ?? { games: 0, wins: 0 }
+      record.games += 1
+      if (won) record.wins += 1
+      totals.set(id, record)
+    }
+
+    if (realIds.length !== 2) return
+
+    for (const candidateId of realIds) {
+      const partnerId = realIds.find((id) => id !== candidateId)!
+      const key = `${candidateId}::${partnerId}`
+      const record = pairs.get(key) ?? { games: 0, wins: 0 }
+      record.games += 1
+      if (won) record.wins += 1
+      pairs.set(key, record)
+    }
+  }
+
+  for (const game of games) {
+    addTeam(game.winnerIds, true)
+    addTeam(game.loserIds, false)
+  }
+
+  const impacts: PartnerImpactStat[] = []
+
+  for (const candidate of eligiblePlayers.values()) {
+    let excessWins = 0
+    let comparedGames = 0
+    let partnerCount = 0
+
+    for (const partner of eligiblePlayers.values()) {
+      if (partner.id === candidate.id) continue
+
+      const together = pairs.get(`${candidate.id}::${partner.id}`)
+      const total = totals.get(partner.id)
+      if (!together || !total) continue
+
+      const otherGames = total.games - together.games
+      if (otherGames === 0) continue
+
+      const otherWins = total.wins - together.wins
+      const usualWinRate = (otherWins + 2) / (otherGames + 4)
+      excessWins += together.wins - usualWinRate * together.games
+      comparedGames += together.games
+      partnerCount += 1
+    }
+
+    if (comparedGames === 0) continue
+
+    // Quatro jogos virtuais reduzem o peso de amostras pequenas.
+    const impactPercentagePoints = Number((100 * excessWins / (comparedGames + 4)).toFixed(1))
+    if (impactPercentagePoints === 0) continue
+
+    impacts.push({
+      playerId: candidate.id,
+      name: candidate.name,
+      photoUrl: candidate.photoUrl,
+      impactPercentagePoints,
+      comparedGames,
+      partnerCount,
+    })
+  }
+
+  const byStrength = (a: PartnerImpactStat, b: PartnerImpactStat) =>
+    Math.abs(b.impactPercentagePoints) - Math.abs(a.impactPercentagePoints)
+    || b.comparedGames - a.comparedGames
+    || b.partnerCount - a.partnerCount
+    || a.name.localeCompare(b.name, 'pt-BR')
+
+  return {
+    positive: impacts.filter((row) => row.impactPercentagePoints > 0).sort(byStrength).slice(0, 2),
+    negative: impacts.filter((row) => row.impactPercentagePoints < 0).sort(byStrength).slice(0, 2),
+  }
 }
 
 export function filterGamesByPeriod(

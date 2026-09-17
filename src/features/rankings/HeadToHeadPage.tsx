@@ -1,8 +1,9 @@
 import { Swords } from 'lucide-react'
 
 import { DominoTile } from '../../components/DominoTile'
-import { getHeadToHeadStats } from '../../lib/stats'
+import { getHeadToHeadStats, getPartnerImpactRankings } from '../../lib/stats'
 import type { Game, Player } from '../../lib/types'
+import { PartnerImpactSection } from './PartnerImpactSection'
 
 interface HeadToHeadPageProps {
   players: Player[]
@@ -11,6 +12,7 @@ interface HeadToHeadPageProps {
 
 export function HeadToHeadPage({ players, games }: HeadToHeadPageProps) {
   const matchups = getHeadToHeadStats(players, games)
+  const impactRankings = getPartnerImpactRankings(players, games)
 
   return (
     <section className="page-wrap inner-page">
@@ -22,6 +24,8 @@ export function HeadToHeadPage({ players, games }: HeadToHeadPageProps) {
         </div>
         <DominoTile left={5} right={5} label="Bucha de cinco" />
       </header>
+
+      <PartnerImpactSection positive={impactRankings.positive} negative={impactRankings.negative} />
 
       <div className="matchup-grid">
         {matchups.map((matchup, index) => {

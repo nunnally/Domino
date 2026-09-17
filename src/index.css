@@ -780,6 +780,7 @@ input:focus-visible {
     transform: none;
   }
 }
+
 .hero-avatar {
   width: 116px;
   height: 116px;
@@ -2339,6 +2340,174 @@ input:focus-visible {
   transform: rotate(5deg);
 }
 
+.partner-impact-section {
+  margin: 0 0 58px;
+}
+.partner-impact-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.partner-impact-label {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 6px 9px;
+  border: 2px solid var(--ink);
+  background: var(--yellow);
+  box-shadow: 3px 3px 0 var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  transform: rotate(-2deg);
+}
+.partner-impact-heading h2 {
+  margin: 0;
+  font-size: clamp(30px, 4.2vw, 51px);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.partner-impact-heading h2 span {
+  color: var(--red);
+  -webkit-text-stroke: 1px var(--ink);
+}
+.partner-impact-heading > p {
+  margin: 0 0 3px;
+  font-size: 17px;
+  font-weight: 700;
+  text-align: right;
+}
+.impact-board-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 26px;
+}
+.impact-board {
+  min-width: 0;
+  border: 4px solid var(--ink);
+  box-shadow: 8px 8px 0 var(--ink);
+}
+.impact-board-positive {
+  background: var(--yellow);
+}
+.impact-board-negative {
+  background: var(--violet);
+}
+.impact-board-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 104px;
+  padding: 20px 23px;
+  border-bottom: 4px solid var(--ink);
+}
+.impact-board-overline {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.impact-board-heading h3 {
+  margin: 0;
+  font-size: clamp(23px, 2.7vw, 32px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.impact-board-emblem {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border: 3px solid var(--ink);
+  background: var(--surface);
+  box-shadow: 4px 4px 0 var(--ink);
+  transform: rotate(7deg);
+}
+.impact-board-negative .impact-board-emblem {
+  transform: rotate(-7deg);
+}
+.impact-list {
+  margin: 0;
+  padding: 0 23px 4px;
+  list-style: none;
+}
+.impact-row {
+  display: grid;
+  grid-template-columns: 26px 54px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px;
+  min-height: 106px;
+  padding: 15px 0;
+}
+.impact-row + .impact-row {
+  border-top: 3px solid var(--ink);
+}
+.impact-rank {
+  align-self: start;
+  padding-top: 11px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.impact-avatar {
+  width: 54px;
+  height: 54px;
+  border-width: 3px;
+  background: var(--surface);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.impact-person {
+  min-width: 0;
+}
+.impact-person strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 21px;
+  line-height: 1.1;
+}
+.impact-person small {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.impact-number {
+  display: grid;
+  justify-items: end;
+  min-width: 88px;
+  line-height: 0.95;
+  font-variant-numeric: tabular-nums;
+}
+.impact-number span {
+  font-size: 29px;
+  letter-spacing: -0.04em;
+}
+.impact-number small {
+  margin-top: 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+.impact-empty {
+  min-height: 130px;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 22px 24px;
+  font-weight: 600;
+}
+.impact-note {
+  max-width: 750px;
+  margin: 20px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
 .matchup-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -3804,6 +3973,65 @@ input:focus-visible {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .partner-impact-section {
+    margin-bottom: 44px;
+  }
+  .partner-impact-heading {
+    display: block;
+  }
+  .partner-impact-heading > p {
+    margin-top: 10px;
+    text-align: left;
+  }
+  .impact-board-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (max-width: 420px) {
+  .partner-impact-heading h2 {
+    font-size: 30px;
+  }
+  .impact-board-heading {
+    padding: 18px 15px;
+  }
+  .impact-board-heading h3 {
+    font-size: 24px;
+  }
+  .impact-board-emblem {
+    width: 46px;
+    height: 46px;
+  }
+  .impact-list {
+    padding-inline: 15px;
+  }
+  .impact-row {
+    grid-template-columns: 18px 44px minmax(0, 1fr) auto;
+    gap: 9px;
+  }
+  .impact-rank {
+    font-size: 11px;
+  }
+  .impact-avatar {
+    width: 44px;
+    height: 44px;
+  }
+  .impact-person strong {
+    font-size: 17px;
+  }
+  .impact-person small {
+    font-size: 10px;
+  }
+  .impact-number {
+    min-width: 71px;
+  }
+  .impact-number span {
+    font-size: 23px;
   }
 }
 
