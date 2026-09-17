@@ -12,7 +12,7 @@ interface HeadToHeadPageProps {
 
 export function HeadToHeadPage({ players, games }: HeadToHeadPageProps) {
   const matchups = getHeadToHeadStats(players, games)
-  const impactRankings = getPartnerImpactRankings(players, games)
+  // const impactRankings = getPartnerImpactRankings(players, games)
 
   return (
     <section className="page-wrap inner-page">
