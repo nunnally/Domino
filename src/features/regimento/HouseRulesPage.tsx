@@ -1,6 +1,7 @@
 import { Gavel, Scale, ScrollText, ShieldCheck } from 'lucide-react'
 
 import { DominoTile } from '../../components/DominoTile'
+import { RANKING_MINIMUM_GAMES } from '../../lib/stats'
 
 const ministersPhoto = `${import.meta.env.BASE_URL}assets/ministros-std.jpeg`
 
@@ -67,6 +68,24 @@ const rules = [
     number: '05',
     title: 'A súmula vale mais que a memória',
     text: 'O histórico registrado é a fonte oficial para rankings, recordes e provocações.',
+  },
+]
+
+const rankingRules = [
+  {
+    number: '01',
+    title: 'Classificação oficial',
+    text: `Em cada período, calcula-se a média de jogos dos quatro participantes mais ativos (ou dos disponíveis, se houver menos de quatro). O mínimo exigido é o maior valor entre ${RANKING_MINIMUM_GAMES} jogos e 60% dessa média, arredondado para cima. Antes desse mínimo, o resultado aparece como provisório, sem posição oficial.`,
+  },
+  {
+    number: '02',
+    title: 'Score base',
+    text: 'Se J é o total de jogos, V é o número de vitórias e S é o número de Senas recebidas em derrotas, o aproveitamento ajustado é A = (V − 0,05 × S) ÷ J, limitado entre 0 e 1. O score base é 50 + 10 × (A − 0,5) ÷ √(0,25 ÷ J), limitado entre 0 e 100 e arredondado para uma casa decimal.',
+  },
+  {
+    number: '03',
+    title: 'Multiplicador de volume',
+    text: 'Com R igual à média dos participantes mais ativos, o multiplicador é M = 1 + 0,25 × mínimo(J ÷ R, 1). Quando o score base supera 50, o score final é 50 + (score base − 50) × M, limitado a 100 e arredondado para uma casa decimal. Para scores de até 50, o valor base permanece igual.',
   },
 ]
 
@@ -218,6 +237,28 @@ export function HouseRulesPage() {
                 <p>
                   {rule.text}
                 </p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section
+        className="house-rules-section"
+        aria-labelledby="ranking-rules-title"
+      >
+        <div className="house-rules-section-heading">
+          <span className="section-kicker">Critérios do placar</span>
+          <h2 id="ranking-rules-title">Como funciona o ranking</h2>
+        </div>
+
+        <ol className="house-rules-list">
+          {rankingRules.map((rule) => (
+            <li key={rule.number}>
+              <span className="house-rule-number">{rule.number}</span>
+              <div>
+                <h3>{rule.title}</h3>
+                <p>{rule.text}</p>
               </div>
             </li>
           ))}

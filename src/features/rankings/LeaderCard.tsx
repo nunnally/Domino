@@ -25,7 +25,7 @@ export function LeaderCard({ players }: LeaderCardProps) {
         <div className="leader-copy">
           <span
             className="sticker sticker-yellow leader-bubble-enter"
-            aria-label={leader.catchphrase ? undefined : "Líder"}
+            aria-label={leader.catchphrase ? undefined : leader.isQualified ? 'Líder' : 'Destaque provisório'}
           >
             <Trophy size={16} />
 
@@ -48,7 +48,9 @@ export function LeaderCard({ players }: LeaderCardProps) {
           </div>
 
           <div className="leader-details">
-            <p className="leader-kicker leader-title-enter">Líder individual</p>
+            <p className="leader-kicker leader-title-enter">
+              {leader.isQualified ? 'Líder individual' : 'Destaque provisório'}
+            </p>
 
             <h2 className="leader-info-enter leader-name-enter">
               {leader.name}
@@ -81,7 +83,9 @@ export function LeaderCard({ players }: LeaderCardProps) {
   return (
     <section
       className="leader-stage leader-fighter-card leader-stage-tied"
-      aria-label={`${players.length} jogadores empatados na liderança`}
+      aria-label={reference.isQualified
+        ? `${players.length} jogadores empatados na liderança`
+        : `${players.length} jogadores empatados no destaque provisório`}
     >
       <div className="leader-tie-content">
         <div className="leader-tie-heading leader-title-enter">
@@ -90,7 +94,9 @@ export function LeaderCard({ players }: LeaderCardProps) {
             Os véi tão brigando
           </span>
 
-          <p className="leader-kicker">Liderança dividida</p>
+          <p className="leader-kicker">
+            {reference.isQualified ? 'Liderança dividida' : 'Destaque provisório'}
+          </p>
 
           <h2>Tá difícil decidir quem manda na mesa</h2>
         </div>

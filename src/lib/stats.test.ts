@@ -125,7 +125,7 @@ describe('estatísticas das sete partidas iniciais', () => {
     const cesar = stats.find(({ playerId }) => playerId === 'cesar')!
     const vinicius = stats.find(({ playerId }) => playerId === 'vinicius')!
 
-    expect(cesar.score).toBe(64.1)
+    expect(cesar.score).toBe(67.6)
     expect(vinicius.score).toBe(35.9)
     expect(vinicius.score).toBeLessThan(50)
     expect(cesar.isQualified).toBe(false)
@@ -136,6 +136,66 @@ describe('estatísticas das sete partidas iniciais', () => {
 
     expect(stats.find(({ playerId }) => playerId === 'cesar')?.minimumGames).toBe(10)
     expect(stats.find(({ playerId }) => playerId === 'joice')?.isQualified).toBe(false)
+  })
+
+  it('exige 60% da média dos quatro mais ativos e mantém os demais provisórios', () => {
+    const games = Array.from({ length: 63 }, (_, index) => ({
+      ...seedGames[0],
+      id: `volume-${index}`,
+      winnerIds: (index < 50 ? ['cesar', 'vinicius'] : ['gustavo', 'vinicius']) as [string, string],
+      loserIds: (index < 50 ? ['machilas', 'david'] : ['cesar', 'machilas']) as [string, string],
+      senaIds: [],
+    }))
+
+    const stats = getIndividualStats(seedPlayers, games)
+    const gustavo = stats.find(({ playerId }) => playerId === 'gustavo')!
+
+    expect(stats[0].minimumGames).toBe(36)
+    expect(stats.filter(({ isQualified }) => isQualified)).toHaveLength(4)
+    expect(gustavo).toMatchObject({ games: 13, wins: 13, isQualified: false })
+    expect(stats.indexOf(gustavo)).toBeGreaterThan(stats.findIndex(({ playerId }) => playerId === 'david'))
+  })
+
+  it('amplia somente o desempenho positivo com o volume de jogos', () => {
+    const games = Array.from({ length: 20 }, (_, index) => ({
+      ...seedGames[0],
+      id: `bonus-${index}`,
+      winnerIds: (index < 14 ? ['cesar', 'vinicius'] : ['machilas', 'david']) as [string, string],
+      loserIds: (index < 14 ? ['machilas', 'david'] : ['cesar', 'vinicius']) as [string, string],
+      senaIds: [],
+    }))
+    const stats = getIndividualStats(seedPlayers, games)
+
+    expect(stats.find(({ playerId }) => playerId === 'cesar')?.score).toBe(72.4)
+    expect(stats.find(({ playerId }) => playerId === 'machilas')?.score).toBe(32.1)
+  })
+
+  it('usa a mesma regra de score na linha do tempo do perfil', () => {
+    const games = [seedGames[1], seedGames[2]]
+    const points = getPlayerScoreTimeline(seedPlayers, games, 'cesar')
+
+    expect(points.map(({ score }) => score)).toEqual([61.7, 67.6])
+    expect(points.at(-1)?.score).toBe(getIndividualStats(seedPlayers, games).find(({ playerId }) => playerId === 'cesar')?.score)
+  })
+
+  it('mantém o último ponto do perfil igual ao ranking quando outros continuam jogando', () => {
+    const games = [
+      seedGames[1],
+      seedGames[2],
+      ...Array.from({ length: 12 }, (_, index) => ({
+        ...seedGames[0],
+        id: `depois-${index}`,
+        playedAt: `2026-09-03T${String(index).padStart(2, '0')}:00:00-03:00`,
+        winnerIds: ['machilas', 'gustavo'] as [string, string],
+        loserIds: ['david', 'emanoel'] as [string, string],
+        senaIds: [],
+      })),
+    ]
+
+    const timeline = getPlayerScoreTimeline(seedPlayers, games, 'cesar')
+    const rankingScore = getIndividualStats(seedPlayers, games).find(({ playerId }) => playerId === 'cesar')?.score
+
+    expect(timeline.at(-1)?.score).toBe(rankingScore)
   })
 
   it('não inclui o convidado nos rankings', () => {

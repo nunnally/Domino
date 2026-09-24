@@ -9,7 +9,15 @@ describe('RankingsPage', () => {
   it('mostra vitórias, derrotas e score individual', () => {
     render(<RankingsPage players={seedPlayers} games={seedGames} />)
 
-    expect(screen.getByRole('row', { name: /césar, 5 vitórias, 1 derrotas, score 66.3 pontos/i })).toBeInTheDocument()
+    expect(screen.getByRole('row', { name: /césar, 5 vitórias, 1 derrotas, score 70.2 pontos/i })).toBeInTheDocument()
+  })
+
+  it('deixa os jogadores provisórios sem posição oficial', () => {
+    render(<RankingsPage players={seedPlayers} games={seedGames} />)
+
+    const row = screen.getByRole('row', { name: /joice, 2 vitórias/i })
+    expect(within(row).getByText(/Provisório · faltam 8 jogos/)).toBeInTheDocument()
+    expect(within(row).queryByText('02')).not.toBeInTheDocument()
   })
 
   it('mostra o ranking de gabuadas', () => {
