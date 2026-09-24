@@ -17,8 +17,10 @@ const percentage = (wins: number, games: number) =>
 
 const SCORE_SENA_WEIGHT = 0.05
 const SCORE_POINTS_PER_STANDARD_DEVIATION = 10
+const SCORE_VOLUME_BONUS = 0.25
+const RANKING_PARTICIPATION_RATIO = 0.6
 
-// Mínimo de partidas para entrar no ranking válido
+// Piso de partidas antes da classificação oficial
 export const RANKING_MINIMUM_GAMES = 10
 export const PARTNER_IMPACT_MINIMUM_GAMES = 10
 export const PARTNER_IMPACT_MINIMUM_PARTNERS = 2
@@ -33,23 +35,19 @@ const scoreFromRecord = (wins: number, games: number, lostSenas: number) => {
   return Number(clamp(50 + SCORE_POINTS_PER_STANDARD_DEVIATION * zScore, 0, 100).toFixed(1))
 }
 
-const minimumGamesForRanking = (gameCounts: number[]) =>
-  gameCounts.some((games) => games > 0) ? RANKING_MINIMUM_GAMES : 0
+const referenceGames = (gameCounts: number[]) => {
+  const topFour = gameCounts.filter((games) => games > 0).sort((a, b) => b - a).slice(0, 4)
+  return topFour.length ? topFour.reduce((sum, games) => sum + games, 0) / topFour.length : 0
+}
 
-/*
- * Fórmula dinâmica anterior (mantida como referência):
- *
- * const topVolumes = [...gameCounts]
- *   .filter((games) => games > 0)
- *   .sort((a, b) => b - a)
- *   .slice(0, 4)
- * const mediaDosQuatroMaiores =
- *   topVolumes.reduce((sum, games) => sum + games, 0) / topVolumes.length
- * const minimo = Math.ceil(mediaDosQuatroMaiores * 0.8)
- *
- * Ou seja: o jogador precisava ter pelo menos 80% da média de partidas
- * dos quatro jogadores com maior volume. Com os dados atuais, isso dava 25.
- */
+const minimumGamesForRanking = (reference: number) =>
+  reference > 0 ? Math.max(RANKING_MINIMUM_GAMES, Math.ceil(RANKING_PARTICIPATION_RATIO * reference)) : 0
+
+const scoreWithVolume = (baseScore: number, games: number, reference: number) => {
+  if (reference === 0 || baseScore <= 50) return baseScore
+  const multiplier = 1 + SCORE_VOLUME_BONUS * Math.min(games / reference, 1)
+  return Number(clamp(50 + (baseScore - 50) * multiplier, 0, 100).toFixed(1))
+}
 
 const playerMap = (players: Player[]) =>
   new Map(players.filter((player) => !isGuestPlayer(player)).map((player) => [player.id, player]))
@@ -140,13 +138,18 @@ export function getIndividualStats(players: Player[], games: Game[]): Individual
     }
   }
 
-  const minimumGames = minimumGamesForRanking([...stats.values()].map((stat) => stat.games))
+  const reference = referenceGames([...stats.values()].map((stat) => stat.games))
+  const minimumGames = minimumGamesForRanking(reference)
 
   return [...stats.values()]
     .map((stat) => ({
       ...stat,
       winRate: percentage(stat.wins, stat.games),
-      score: scoreFromRecord(stat.wins, stat.games, lostSenas.get(stat.playerId) ?? 0),
+      score: scoreWithVolume(
+        scoreFromRecord(stat.wins, stat.games, lostSenas.get(stat.playerId) ?? 0),
+        stat.games,
+        reference,
+      ),
       minimumGames,
       isQualified: stat.games >= minimumGames && stat.games > 0,
     }))
@@ -194,7 +197,15 @@ export function getPlayerScoreTimeline(
   let wins = 0
   let lostSenas = 0
   const points: PlayerScorePoint[] = []
+  const gameCounts = new Map<string, number>()
+  for (const game of games) {
+    for (const id of [...new Set([...game.winnerIds, ...game.loserIds])]) {
+      if (playersById.has(id)) gameCounts.set(id, (gameCounts.get(id) ?? 0) + 1)
+    }
+  }
+  const reference = referenceGames([...gameCounts.values()])
 
+  // A referência atual mantém o último ponto alinhado ao score exibido no perfil.
   for (const game of [...games].sort(compareChronologically)) {
     const isWinner = game.winnerIds.includes(playerId as never)
     const isLoser = game.loserIds.includes(playerId as never)
@@ -213,7 +224,11 @@ export function getPlayerScoreTimeline(
     points.push({
       gameId: game.id,
       playedAt: game.playedAt,
-      score: scoreFromRecord(wins, playedGames, lostSenas),
+      score: scoreWithVolume(
+        scoreFromRecord(wins, playedGames, lostSenas),
+        playedGames,
+        reference,
+      ),
       result,
       partnerName: ownTeam
         .filter((id) => id !== playerId)

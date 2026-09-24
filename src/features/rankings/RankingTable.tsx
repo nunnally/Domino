@@ -79,7 +79,7 @@ export function RankingTable({
             key={row.playerId}
           >
             <strong className="rank-number">
-            {String(rankingIndex + 1).padStart(2, '0')}  
+            {row.isQualified ? String(rankingIndex + 1).padStart(2, '0') : '—'}
             </strong>
 
             <span className="rank-player">
@@ -89,7 +89,14 @@ export function RankingTable({
                 mood={mood}
               />
 
-              <strong>{row.name}</strong>
+              <span className="rank-player-name">
+                <strong>{row.name}</strong>
+                {!row.isQualified && (
+                  <small className="rank-provisional">
+                    Provisório · faltam {row.minimumGames - row.games} jogos
+                  </small>
+                )}
+              </span>
             </span>
 
             <span className="rank-stat">

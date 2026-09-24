@@ -1229,6 +1229,16 @@ input:focus-visible {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.rank-player-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.rank-provisional {
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--ink);
+}
 .rank-stat {
   text-align: center;
   font-weight: 700;

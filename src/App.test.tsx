@@ -20,6 +20,8 @@ describe("dashboard", () => {
     ).toBeInTheDocument();
 
     expect(screen.getAllByText(/4 vitórias/i).length).toBeGreaterThan(0);
+    expect(screen.getByText('Destaque provisório')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Líder')).not.toBeInTheDocument();
 
     expect(
       screen.getByRole("button", {
