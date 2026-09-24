@@ -17,7 +17,24 @@ import {
 
 import type { Player } from "../../lib/types";
 
+import type { GameDraft } from "../../lib/validation";
+
 import { LiveGame } from "./LiveGame";
+
+import type { LiveTeam } from "./LiveGameSetup";
+
+import {
+  clearStoredLiveGame,
+  getStoredLiveGame,
+  saveStoredLiveGame,
+  type StoredLiveGame,
+} from "./liveGameStorage";
+
+/*
+ * =========================================================
+ * DADOS
+ * =========================================================
+ */
 
 const players: Player[] = [
   {
@@ -50,77 +67,232 @@ const players: Player[] = [
   },
 ];
 
-const teamA: [string, string] = [
+const teamA: LiveTeam = [
   "player-1",
   "player-2",
 ];
 
-const teamB: [string, string] = [
+const teamB: LiveTeam = [
   "player-3",
   "player-4",
 ];
 
-const getScore = (
-  container: HTMLElement,
-  team: "A" | "B",
-) => {
-  const selector =
-    team === "A"
-      ? ".live-team-a .live-score-number"
-      : ".live-team-b .live-score-number";
+type TeamLabel =
+  | "Dupla 01"
+  | "Dupla 02";
 
-  return container.querySelector(
-    selector,
-  )?.textContent;
+type LocateResult =
+  | {
+      latitude: number;
+      longitude: number;
+    }
+  | undefined;
+
+type SaveHandler = (
+  draft: GameDraft,
+) => void | Promise<void>;
+
+type CancelHandler =
+  () => void;
+
+type LocateHandler =
+  () => Promise<LocateResult>;
+
+interface RenderGameOverrides {
+  onSave?: SaveHandler;
+  onCancel?: CancelHandler;
+  locate?: LocateHandler;
+}
+
+/*
+ * =========================================================
+ * RENDER
+ * =========================================================
+ */
+
+const renderGame = (
+  overrides: RenderGameOverrides = {},
+) => {
+  const user =
+    userEvent.setup();
+
+  const defaultOnSave =
+    vi.fn<SaveHandler>();
+
+  const defaultOnCancel =
+    vi.fn<CancelHandler>();
+
+  const defaultLocate =
+    vi.fn<LocateHandler>(
+      async () => undefined,
+    );
+
+  const onSave =
+    overrides.onSave ??
+    defaultOnSave;
+
+  const onCancel =
+    overrides.onCancel ??
+    defaultOnCancel;
+
+  const locate =
+    overrides.locate ??
+    defaultLocate;
+
+  render(
+    <LiveGame
+      players={players}
+      teamA={teamA}
+      teamB={teamB}
+      onSave={onSave}
+      onCancel={onCancel}
+      locate={locate}
+    />,
+  );
+
+  return {
+    user,
+    onSave,
+    onCancel,
+    locate,
+  };
 };
 
-const addPoints = async (
+/*
+ * =========================================================
+ * HELPERS
+ * =========================================================
+ */
+
+const getTeamSection = (
+  teamLabel: TeamLabel,
+) => {
+  const label =
+    screen.getByText(
+      teamLabel,
+      {
+        selector: ".sticker",
+      },
+    );
+
+  const section =
+    label.closest(
+      ".live-team",
+    );
+
+  if (
+    !(
+      section instanceof
+      HTMLElement
+    )
+  ) {
+    throw new Error(
+      `Não foi possível encontrar ${teamLabel}`,
+    );
+  }
+
+  return section;
+};
+
+const getScore = (
+  teamLabel: TeamLabel,
+) => {
+  const section =
+    getTeamSection(
+      teamLabel,
+    );
+
+  const score =
+    section.querySelector(
+      ".live-score-number",
+    );
+
+  if (!score) {
+    throw new Error(
+      `Não foi possível encontrar o placar de ${teamLabel}`,
+    );
+  }
+
+  return (
+    score.textContent ?? ""
+  ).trim();
+};
+
+const addPoint = async (
   user: ReturnType<
     typeof userEvent.setup
   >,
-  team: "A" | "B",
-  amount: number,
+  teamLabel: TeamLabel,
 ) => {
-  for (
-    let point = 0;
-    point < amount;
-    point += 1
-  ) {
-    const buttons =
-      screen.getAllByRole(
-        "button",
-        {
-          name: /\+1 ponto/i,
-        },
-      );
-
-    await user.click(
-      team === "A"
-        ? buttons[0]
-        : buttons[1],
+  const section =
+    getTeamSection(
+      teamLabel,
     );
-  }
+
+  const button =
+    within(
+      section,
+    ).getByRole(
+      "button",
+      {
+        name: /\+1 ponto/i,
+      },
+    );
+
+  await user.click(
+    button,
+  );
+};
+
+const undoLast = async (
+  user: ReturnType<
+    typeof userEvent.setup
+  >,
+) => {
+  const button =
+    screen.getByRole(
+      "button",
+      {
+        name: /^desfazer$/i,
+      },
+    );
+
+  await user.click(
+    button,
+  );
 };
 
 const registerGabuada = async (
   user: ReturnType<
     typeof userEvent.setup
   >,
-  team: "A" | "B",
+  teamLabel: TeamLabel,
   playerName: string,
 ) => {
   const buttons =
-    screen.getAllByRole(
+    screen.queryAllByRole(
       "button",
       {
         name: /gabuada/i,
       },
     );
 
+  const teamButton =
+    buttons.find(
+      (button) =>
+        button.textContent?.includes(
+          teamLabel,
+        ),
+    );
+
+  if (!teamButton) {
+    throw new Error(
+      `Não foi possível encontrar o botão de Gabuada de ${teamLabel}`,
+    );
+  }
+
   await user.click(
-    team === "A"
-      ? buttons[0]
-      : buttons[1],
+    teamButton,
   );
 
   const dialog =
@@ -131,8 +303,10 @@ const registerGabuada = async (
       },
     );
 
-  await user.click(
-    within(dialog).getByRole(
+  const playerButton =
+    within(
+      dialog,
+    ).getByRole(
       "button",
       {
         name: new RegExp(
@@ -140,711 +314,1402 @@ const registerGabuada = async (
           "i",
         ),
       },
-    ),
+    );
+
+  await user.click(
+    playerButton,
   );
 };
 
-const undoLast = async (
+const finishNormalGame = async (
   user: ReturnType<
     typeof userEvent.setup
   >,
 ) => {
-  await user.click(
-    screen.getByRole(
-      "button",
-      {
-        name: /^desfazer$/i,
-      },
-    ),
+  /*
+   * Resultado:
+   *
+   * Dupla 01 = 4
+   * Dupla 02 = 3
+   */
+
+  await addPoint(
+    user,
+    "Dupla 01",
+  );
+
+  await addPoint(
+    user,
+    "Dupla 02",
+  );
+
+  await addPoint(
+    user,
+    "Dupla 01",
+  );
+
+  await addPoint(
+    user,
+    "Dupla 02",
+  );
+
+  await addPoint(
+    user,
+    "Dupla 01",
+  );
+
+  await addPoint(
+    user,
+    "Dupla 02",
+  );
+
+  await addPoint(
+    user,
+    "Dupla 01",
   );
 };
 
-describe("LiveGame", () => {
-  beforeEach(() => {
-    Object.defineProperty(
-      Element.prototype,
-      "scrollIntoView",
-      {
-        configurable: true,
-        value: vi.fn(),
+/*
+ * =========================================================
+ * TESTES
+ * =========================================================
+ */
+
+describe(
+  "LiveGame",
+  () => {
+    /*
+     * O LiveGame agora persiste a partida.
+     *
+     * Por isso cada teste precisa
+     * começar completamente limpo.
+     */
+    beforeEach(() => {
+      clearStoredLiveGame();
+
+      vi.clearAllMocks();
+    });
+
+    it(
+      "inicia a partida com o placar zerado",
+      () => {
+        renderGame();
+
+        expect(
+          getScore(
+            "Dupla 01",
+          ),
+        ).toBe("0");
+
+        expect(
+          getScore(
+            "Dupla 02",
+          ),
+        ).toBe("0");
+
+        expect(
+          screen.getByText(
+            "César",
+          ),
+        ).toBeInTheDocument();
+
+        expect(
+          screen.getByText(
+            "Vinícius",
+          ),
+        ).toBeInTheDocument();
+
+        expect(
+          screen.getByText(
+            "David",
+          ),
+        ).toBeInTheDocument();
+
+        expect(
+          screen.getByText(
+            "Emanoel",
+          ),
+        ).toBeInTheDocument();
       },
     );
-  });
 
-  it(
-    "inicia a partida com placar zero a zero",
-    () => {
-      const { container } =
-        render(
-          <LiveGame
-            players={players}
-            teamA={teamA}
-            teamB={teamB}
-            onSave={() => {}}
-            onCancel={() => {}}
-            locate={async () =>
-              undefined
-            }
-          />,
+    it(
+      "adiciona um ponto para uma dupla",
+      async () => {
+        const {
+          user,
+        } = renderGame();
+
+        await addPoint(
+          user,
+          "Dupla 01",
         );
 
-      expect(
-        getScore(
-          container,
-          "A",
-        ),
-      ).toBe("0");
+        expect(
+          getScore(
+            "Dupla 01",
+          ),
+        ).toBe("1");
 
-      expect(
-        getScore(
-          container,
-          "B",
-        ),
-      ).toBe("0");
-    },
-  );
+        expect(
+          getScore(
+            "Dupla 02",
+          ),
+        ).toBe("0");
+      },
+    );
 
-  it(
-    "adiciona um ponto para a Dupla 01",
-    async () => {
-      const user =
-        userEvent.setup();
+    it(
+      "salva o andamento da partida no localStorage",
+      async () => {
+        const {
+          user,
+        } = renderGame();
 
-      const { container } =
-        render(
-          <LiveGame
-            players={players}
-            teamA={teamA}
-            teamB={teamB}
-            onSave={() => {}}
-            onCancel={() => {}}
-            locate={async () =>
-              undefined
-            }
-          />,
+        await addPoint(
+          user,
+          "Dupla 01",
         );
 
-      await addPoints(
-        user,
-        "A",
-        1,
-      );
-
-      expect(
-        getScore(
-          container,
-          "A",
-        ),
-      ).toBe("1");
-
-      expect(
-        getScore(
-          container,
-          "B",
-        ),
-      ).toBe("0");
-    },
-  );
-
-  it(
-    "adiciona um ponto para a Dupla 02",
-    async () => {
-      const user =
-        userEvent.setup();
-
-      const { container } =
-        render(
-          <LiveGame
-            players={players}
-            teamA={teamA}
-            teamB={teamB}
-            onSave={() => {}}
-            onCancel={() => {}}
-            locate={async () =>
-              undefined
-            }
-          />,
+        await addPoint(
+          user,
+          "Dupla 02",
         );
 
-      await addPoints(
-        user,
-        "B",
-        1,
-      );
-
-      expect(
-        getScore(
-          container,
-          "A",
-        ),
-      ).toBe("0");
-
-      expect(
-        getScore(
-          container,
-          "B",
-        ),
-      ).toBe("1");
-    },
-  );
-
-  it(
-    "Gabuada em zero a zero leva a dupla diretamente para quatro pontos",
-    async () => {
-      const user =
-        userEvent.setup();
-
-      const { container } =
-        render(
-          <LiveGame
-            players={players}
-            teamA={teamA}
-            teamB={teamB}
-            onSave={() => {}}
-            onCancel={() => {}}
-            locate={async () =>
-              undefined
-            }
-          />,
+        await addPoint(
+          user,
+          "Dupla 01",
         );
 
-      await registerGabuada(
-        user,
-        "A",
-        "César",
-      );
+        await waitFor(
+          () => {
+            const stored =
+              getStoredLiveGame();
 
-      expect(
-        getScore(
-          container,
-          "A",
-        ),
-      ).toBe("4");
+            expect(
+              stored,
+            ).not.toBeNull();
 
-      expect(
-        getScore(
-          container,
-          "B",
-        ),
-      ).toBe("0");
+            expect(
+              stored?.scoreA,
+            ).toBe(2);
 
-      expect(
-        screen.getByText(
-          "Partida encerrada",
-        ),
-      ).toBeInTheDocument();
+            expect(
+              stored?.scoreB,
+            ).toBe(1);
 
-      expect(
-        screen.getByText(
-          /gabuada — césar/i,
-        ),
-      ).toBeInTheDocument();
-    },
-  );
+            expect(
+              stored?.events,
+            ).toHaveLength(
+              3,
+            );
+          },
+        );
+      },
+    );
 
-  it(
-    "Gabuada com dois pontos leva o placar para quatro e não para seis",
-    async () => {
-      const user =
-        userEvent.setup();
+    it(
+      "restaura uma partida existente no localStorage",
+      () => {
+        const storedGame: StoredLiveGame =
+          {
+            version: 1,
 
-      const { container } =
-        render(
-          <LiveGame
-            players={players}
-            teamA={teamA}
-            teamB={teamB}
-            onSave={() => {}}
-            onCancel={() => {}}
-            locate={async () =>
-              undefined
-            }
-          />,
+            teamA: [
+              "player-1",
+              "player-2",
+            ],
+
+            teamB: [
+              "player-3",
+              "player-4",
+            ],
+
+            scoreA: 3,
+
+            scoreB: 2,
+
+            events: [
+              {
+                id: "event-1",
+                type: "point",
+                team: "A",
+                createdAt:
+                  "2026-09-23T18:00:00.000Z",
+              },
+              {
+                id: "event-2",
+                type: "point",
+                team: "B",
+                createdAt:
+                  "2026-09-23T18:01:00.000Z",
+              },
+              {
+                id: "event-3",
+                type: "point",
+                team: "A",
+                createdAt:
+                  "2026-09-23T18:02:00.000Z",
+              },
+              {
+                id: "event-4",
+                type: "point",
+                team: "B",
+                createdAt:
+                  "2026-09-23T18:03:00.000Z",
+              },
+              {
+                id: "event-5",
+                type: "point",
+                team: "A",
+                createdAt:
+                  "2026-09-23T18:04:00.000Z",
+              },
+            ],
+
+            moment:
+              "match-point",
+
+            momentTeam:
+              "A",
+
+            momentContent: {
+              kicker:
+                "Ponto decisivo",
+
+              title:
+                "Uma mão pode acabar com tudo.",
+            },
+
+            startedAt:
+              "2026-09-23T18:00:00.000Z",
+
+            updatedAt:
+              "2026-09-23T18:04:00.000Z",
+          };
+
+        saveStoredLiveGame(
+          storedGame,
         );
 
-      await addPoints(
-        user,
-        "A",
-        2,
-      );
+        renderGame();
 
-      expect(
-        getScore(
-          container,
-          "A",
-        ),
-      ).toBe("2");
+        expect(
+          getScore(
+            "Dupla 01",
+          ),
+        ).toBe("3");
 
-      await registerGabuada(
-        user,
-        "A",
-        "César",
-      );
+        expect(
+          getScore(
+            "Dupla 02",
+          ),
+        ).toBe("2");
 
-      expect(
-        getScore(
-          container,
-          "A",
-        ),
-      ).toBe("4");
+        expect(
+          screen.getByText(
+            "Ponto decisivo",
+          ),
+        ).toBeInTheDocument();
+      },
+    );
 
-      expect(
-        getScore(
-          container,
-          "B",
-        ),
-      ).toBe("0");
+    it(
+      "desfaz um ponto normalmente",
+      async () => {
+        const {
+          user,
+        } = renderGame();
 
-      expect(
-        screen.getByText(
-          "Partida encerrada",
-        ),
-      ).toBeInTheDocument();
-    },
-  );
-
-  it(
-    "Gabuada da Dupla 02 leva a Dupla 02 para quatro pontos",
-    async () => {
-      const user =
-        userEvent.setup();
-
-      const { container } =
-        render(
-          <LiveGame
-            players={players}
-            teamA={teamA}
-            teamB={teamB}
-            onSave={() => {}}
-            onCancel={() => {}}
-            locate={async () =>
-              undefined
-            }
-          />,
+        await addPoint(
+          user,
+          "Dupla 01",
         );
 
-      await addPoints(
-        user,
-        "A",
-        2,
-      );
+        expect(
+          getScore(
+            "Dupla 01",
+          ),
+        ).toBe("1");
 
-      await addPoints(
-        user,
-        "B",
-        1,
-      );
+        await undoLast(
+          user,
+        );
 
-      await registerGabuada(
-        user,
-        "B",
-        "David",
-      );
+        expect(
+          getScore(
+            "Dupla 01",
+          ),
+        ).toBe("0");
 
-      expect(
-        getScore(
-          container,
-          "A",
-        ),
-      ).toBe("2");
+        expect(
+          getScore(
+            "Dupla 02",
+          ),
+        ).toBe("0");
+      },
+    );
 
-      expect(
-        getScore(
-          container,
-          "B",
-        ),
-      ).toBe("4");
+    it(
+      "restaura o momento anterior ao desfazer um ponto",
+      async () => {
+        const {
+          user,
+        } = renderGame();
 
-      expect(
-        screen.getByText(
-          "Partida encerrada",
-        ),
-      ).toBeInTheDocument();
-    },
-  );
+        /*
+         * 1 × 0
+         */
+        await addPoint(
+          user,
+          "Dupla 01",
+        );
 
-  it(
-    "exibe a animação da Gabuada",
-    async () => {
-      const user =
-        userEvent.setup();
+        /*
+         * 1 × 1
+         */
+        await addPoint(
+          user,
+          "Dupla 02",
+        );
 
-      render(
-        <LiveGame
-          players={players}
-          teamA={teamA}
-          teamB={teamB}
-          onSave={() => {}}
-          onCancel={() => {}}
-          locate={async () =>
-            undefined
-          }
-        />,
-      );
+        /*
+         * 2 × 1
+         */
+        await addPoint(
+          user,
+          "Dupla 01",
+        );
 
-      await registerGabuada(
-        user,
-        "A",
-        "César",
-      );
+        /*
+         * 2 × 2
+         */
+        await addPoint(
+          user,
+          "Dupla 02",
+        );
 
-      expect(
-        screen.getByLabelText(
-          "Gabuada",
-        ),
-      ).toBeInTheDocument();
+        expect(
+          document.querySelector(
+            ".live-moment-banner-tie",
+          ),
+        ).not.toBeNull();
 
-      expect(
-        screen.getByText(
-          "GABUADA!",
-        ),
-      ).toBeInTheDocument();
+        /*
+         * 3 × 2
+         */
+        await addPoint(
+          user,
+          "Dupla 01",
+        );
 
-      expect(
-        screen.getByText(
+        /*
+         * Desfaz:
+         *
+         * 2 × 2
+         */
+        await undoLast(
+          user,
+        );
+
+        expect(
+          getScore(
+            "Dupla 01",
+          ),
+        ).toBe("2");
+
+        expect(
+          getScore(
+            "Dupla 02",
+          ),
+        ).toBe("2");
+
+        expect(
+          document.querySelector(
+            ".live-moment-banner-tie",
+          ),
+        ).not.toBeNull();
+      },
+    );
+
+    it(
+      "encerra normalmente quando uma dupla chega a quatro pontos",
+      async () => {
+        const onSave =
+          vi.fn<SaveHandler>();
+
+        const {
+          user,
+        } = renderGame({
+          onSave,
+        });
+
+        await addPoint(
+          user,
+          "Dupla 01",
+        );
+
+        await addPoint(
+          user,
+          "Dupla 01",
+        );
+
+        await addPoint(
+          user,
+          "Dupla 01",
+        );
+
+        await addPoint(
+          user,
+          "Dupla 01",
+        );
+
+        expect(
+          getScore(
+            "Dupla 01",
+          ),
+        ).toBe("4");
+
+        expect(
+          getScore(
+            "Dupla 02",
+          ),
+        ).toBe("0");
+
+        expect(
+          screen.getByText(
+            "Partida encerrada",
+          ),
+        ).toBeInTheDocument();
+
+        /*
+         * Chegar a quatro não
+         * salva automaticamente.
+         */
+        expect(
+          onSave,
+        ).not.toHaveBeenCalled();
+      },
+    );
+
+    it(
+      "não salva automaticamente ao chegar aos quatro pontos",
+      async () => {
+        const onSave =
+          vi.fn<SaveHandler>();
+
+        const {
+          user,
+        } = renderGame({
+          onSave,
+        });
+
+        await finishNormalGame(
+          user,
+        );
+
+        expect(
+          getScore(
+            "Dupla 01",
+          ),
+        ).toBe("4");
+
+        expect(
+          getScore(
+            "Dupla 02",
+          ),
+        ).toBe("3");
+
+        expect(
+          onSave,
+        ).not.toHaveBeenCalled();
+
+        expect(
+          screen.getByRole(
+            "button",
+            {
+              name: /salvar nos resultados/i,
+            },
+          ),
+        ).toBeInTheDocument();
+      },
+    );
+
+    it(
+      "permite desfazer depois que uma dupla chega a quatro pontos",
+      async () => {
+        const onSave =
+          vi.fn<SaveHandler>();
+
+        const {
+          user,
+        } = renderGame({
+          onSave,
+        });
+
+        await finishNormalGame(
+          user,
+        );
+
+        expect(
+          getScore(
+            "Dupla 01",
+          ),
+        ).toBe("4");
+
+        await undoLast(
+          user,
+        );
+
+        expect(
+          getScore(
+            "Dupla 01",
+          ),
+        ).toBe("3");
+
+        expect(
+          getScore(
+            "Dupla 02",
+          ),
+        ).toBe("3");
+
+        expect(
+          screen.queryByText(
+            "Partida encerrada",
+          ),
+        ).not.toBeInTheDocument();
+
+        expect(
+          within(
+            getTeamSection(
+              "Dupla 01",
+            ),
+          ).getByRole(
+            "button",
+            {
+              name: /\+1 ponto/i,
+            },
+          ),
+        ).not.toBeDisabled();
+
+        expect(
+          onSave,
+        ).not.toHaveBeenCalled();
+      },
+    );
+
+    it(
+      "mostra a rodada correta quando a partida termina",
+      async () => {
+        const {
+          user,
+        } = renderGame();
+
+        /*
+         * 4 × 3:
+         * sete eventos.
+         */
+        await finishNormalGame(
+          user,
+        );
+
+        const counter =
+          document.querySelector(
+            ".live-round-count strong",
+          );
+
+        expect(
+          counter?.textContent,
+        ).toBe("7");
+      },
+    );
+
+    it(
+      "salva vencedores perdedores e placar de uma partida normal",
+      async () => {
+        const onSave =
+          vi.fn<SaveHandler>();
+
+        const {
+          user,
+        } = renderGame({
+          onSave,
+        });
+
+        await finishNormalGame(
+          user,
+        );
+
+        /*
+         * Não salva sozinho.
+         */
+        expect(
+          onSave,
+        ).not.toHaveBeenCalled();
+
+        await user.click(
+          screen.getByRole(
+            "button",
+            {
+              name: /salvar nos resultados/i,
+            },
+          ),
+        );
+
+        await waitFor(
+          () => {
+            expect(
+              onSave,
+            ).toHaveBeenCalledTimes(
+              1,
+            );
+          },
+        );
+
+        expect(
+          onSave,
+        ).toHaveBeenCalledWith(
+          expect.objectContaining(
+            {
+              winnerIds: [
+                "player-1",
+                "player-2",
+              ],
+
+              loserIds: [
+                "player-3",
+                "player-4",
+              ],
+
+              winnerScore:
+                4,
+
+              loserScore:
+                3,
+
+              gabuadaIds:
+                [],
+
+              senaIds:
+                [],
+            },
+          ),
+        );
+      },
+    );
+
+    it(
+      "limpa o localStorage somente depois de salvar com sucesso",
+      async () => {
+        const onSave =
+          vi.fn<SaveHandler>();
+
+        const {
+          user,
+        } = renderGame({
+          onSave,
+        });
+
+        await finishNormalGame(
+          user,
+        );
+
+        /*
+         * Antes de salvar,
+         * a partida continua local.
+         */
+        await waitFor(
+          () => {
+            expect(
+              getStoredLiveGame(),
+            ).not.toBeNull();
+          },
+        );
+
+        await user.click(
+          screen.getByRole(
+            "button",
+            {
+              name: /salvar nos resultados/i,
+            },
+          ),
+        );
+
+        await waitFor(
+          () => {
+            expect(
+              onSave,
+            ).toHaveBeenCalledOnce();
+          },
+        );
+
+        await waitFor(
+          () => {
+            expect(
+              getStoredLiveGame(),
+            ).toBeNull();
+          },
+        );
+      },
+    );
+
+    it(
+      "mantém a partida no localStorage se o salvamento falhar",
+      async () => {
+        const onSave =
+          vi.fn<SaveHandler>(
+            async () => {
+              throw new Error(
+                "Supabase indisponível",
+              );
+            },
+          );
+
+        const {
+          user,
+        } = renderGame({
+          onSave,
+        });
+
+        await finishNormalGame(
+          user,
+        );
+
+        await user.click(
+          screen.getByRole(
+            "button",
+            {
+              name: /salvar nos resultados/i,
+            },
+          ),
+        );
+
+        await waitFor(
+          () => {
+            expect(
+              screen.getByText(
+                /não foi possível salvar a partida/i,
+              ),
+            ).toBeInTheDocument();
+          },
+        );
+
+        expect(
+          getStoredLiveGame(),
+        ).not.toBeNull();
+
+        expect(
+          getStoredLiveGame()
+            ?.scoreA,
+        ).toBe(4);
+
+        expect(
+          getStoredLiveGame()
+            ?.scoreB,
+        ).toBe(3);
+      },
+    );
+
+    it(
+      "abre o modal de desistência quando a partida já começou",
+      async () => {
+        const onCancel =
+          vi.fn<CancelHandler>();
+
+        const {
+          user,
+        } = renderGame({
+          onCancel,
+        });
+
+        await addPoint(
+          user,
+          "Dupla 01",
+        );
+
+        await user.click(
+          screen.getByRole(
+            "button",
+            {
+              name: /desistir/i,
+            },
+          ),
+        );
+
+        expect(
+          screen.getByRole(
+            "dialog",
+          ),
+        ).toBeInTheDocument();
+
+        expect(
+          screen.getByRole(
+            "heading",
+            {
+              name: /ihhhh.*arregou/i,
+            },
+          ),
+        ).toBeInTheDocument();
+
+        expect(
+          onCancel,
+        ).not.toHaveBeenCalled();
+      },
+    );
+
+    it(
+      "volta para a partida sem apagar o progresso ao cancelar a desistência",
+      async () => {
+        const onCancel =
+          vi.fn<CancelHandler>();
+
+        const {
+          user,
+        } = renderGame({
+          onCancel,
+        });
+
+        await addPoint(
+          user,
+          "Dupla 01",
+        );
+
+        await user.click(
+          screen.getByRole(
+            "button",
+            {
+              name: /desistir/i,
+            },
+          ),
+        );
+
+        await user.click(
+          screen.getByRole(
+            "button",
+            {
+              name: /voltar pra mesa/i,
+            },
+          ),
+        );
+
+        expect(
+          screen.queryByRole(
+            "dialog",
+          ),
+        ).not.toBeInTheDocument();
+
+        expect(
+          getScore(
+            "Dupla 01",
+          ),
+        ).toBe("1");
+
+        expect(
+          getStoredLiveGame(),
+        ).not.toBeNull();
+
+        expect(
+          onCancel,
+        ).not.toHaveBeenCalled();
+      },
+    );
+
+    it(
+      "apaga a partida ao confirmar que arregou",
+      async () => {
+        const onCancel =
+          vi.fn<CancelHandler>();
+
+        const {
+          user,
+        } = renderGame({
+          onCancel,
+        });
+
+        await addPoint(
+          user,
+          "Dupla 01",
+        );
+
+        await addPoint(
+          user,
+          "Dupla 02",
+        );
+
+        await waitFor(
+          () => {
+            expect(
+              getStoredLiveGame(),
+            ).not.toBeNull();
+          },
+        );
+
+        await user.click(
+          screen.getByRole(
+            "button",
+            {
+              name: /desistir/i,
+            },
+          ),
+        );
+
+        await user.click(
+          screen.getByRole(
+            "button",
+            {
+              name: /^arreguei$/i,
+            },
+          ),
+        );
+
+        expect(
+          getStoredLiveGame(),
+        ).toBeNull();
+
+        expect(
+          onCancel,
+        ).toHaveBeenCalledOnce();
+      },
+    );
+
+    it(
+      "fecha o modal de desistência ao pressionar Escape",
+      async () => {
+        const {
+          user,
+        } = renderGame();
+
+        await addPoint(
+          user,
+          "Dupla 01",
+        );
+
+        await user.click(
+          screen.getByRole(
+            "button",
+            {
+              name: /desistir/i,
+            },
+          ),
+        );
+
+        expect(
+          screen.getByRole(
+            "dialog",
+          ),
+        ).toBeInTheDocument();
+
+        await user.keyboard(
+          "{Escape}",
+        );
+
+        expect(
+          screen.queryByRole(
+            "dialog",
+          ),
+        ).not.toBeInTheDocument();
+
+        expect(
+          getScore(
+            "Dupla 01",
+          ),
+        ).toBe("1");
+      },
+    );
+
+    it(
+      "mostra Descartar quando a partida terminou mas ainda não foi salva",
+      async () => {
+        const onSave =
+          vi.fn<SaveHandler>();
+
+        const {
+          user,
+        } = renderGame({
+          onSave,
+        });
+
+        await finishNormalGame(
+          user,
+        );
+
+        expect(
+          screen.getByRole(
+            "button",
+            {
+              name: /^descartar$/i,
+            },
+          ),
+        ).toBeInTheDocument();
+
+        expect(
+          onSave,
+        ).not.toHaveBeenCalled();
+      },
+    );
+
+    it(
+      "confirma antes de descartar uma partida encerrada e não salva",
+      async () => {
+        const onCancel =
+          vi.fn<CancelHandler>();
+
+        const {
+          user,
+        } = renderGame({
+          onCancel,
+        });
+
+        await finishNormalGame(
+          user,
+        );
+
+        await user.click(
+          screen.getByRole(
+            "button",
+            {
+              name: /^descartar$/i,
+            },
+          ),
+        );
+
+        expect(
+          screen.getByRole(
+            "heading",
+            {
+              name: /descartar resultado/i,
+            },
+          ),
+        ).toBeInTheDocument();
+
+        expect(
+          screen.getByText(
+            /esse resultado ainda não foi salvo/i,
+          ),
+        ).toBeInTheDocument();
+
+        expect(
+          onCancel,
+        ).not.toHaveBeenCalled();
+      },
+    );
+
+    it(
+      "registra uma Gabuada e encerra a partida",
+      async () => {
+        const onSave =
+          vi.fn<SaveHandler>();
+
+        const {
+          user,
+        } = renderGame({
+          onSave,
+        });
+
+        /*
+         * 1 × 1
+         */
+        await addPoint(
+          user,
+          "Dupla 01",
+        );
+
+        await addPoint(
+          user,
+          "Dupla 02",
+        );
+
+        await registerGabuada(
+          user,
+          "Dupla 01",
           "César",
-          {
-            selector:
-              ".gabuada-celebration-player",
-          },
-        ),
-      ).toBeInTheDocument();
-    },
-  );
-
-  it(
-    "desfaz um ponto normalmente",
-    async () => {
-      const user =
-        userEvent.setup();
-
-      const { container } =
-        render(
-          <LiveGame
-            players={players}
-            teamA={teamA}
-            teamB={teamB}
-            onSave={() => {}}
-            onCancel={() => {}}
-            locate={async () =>
-              undefined
-            }
-          />,
         );
 
-      await addPoints(
-        user,
-        "A",
-        1,
-      );
+        expect(
+          getScore(
+            "Dupla 01",
+          ),
+        ).toBe("4");
 
-      expect(
-        getScore(
-          container,
-          "A",
-        ),
-      ).toBe("1");
+        expect(
+          getScore(
+            "Dupla 02",
+          ),
+        ).toBe("1");
 
-      await undoLast(
-        user,
-      );
+        expect(
+          screen.getByText(
+            "Partida encerrada",
+          ),
+        ).toBeInTheDocument();
 
-      expect(
-        getScore(
-          container,
-          "A",
-        ),
-      ).toBe("0");
-    },
-  );
-
-  it(
-    "desfaz a Gabuada restaurando o placar anterior",
-    async () => {
-      const user =
-        userEvent.setup();
-
-      const { container } =
-        render(
-          <LiveGame
-            players={players}
-            teamA={teamA}
-            teamB={teamB}
-            onSave={() => {}}
-            onCancel={() => {}}
-            locate={async () =>
-              undefined
-            }
-          />,
-        );
-
-      await addPoints(
-        user,
-        "A",
-        2,
-      );
-
-      await addPoints(
-        user,
-        "B",
-        1,
-      );
-
-      expect(
-        getScore(
-          container,
-          "A",
-        ),
-      ).toBe("2");
-
-      expect(
-        getScore(
-          container,
-          "B",
-        ),
-      ).toBe("1");
-
-      await registerGabuada(
-        user,
-        "A",
-        "César",
-      );
-
-      expect(
-        getScore(
-          container,
-          "A",
-        ),
-      ).toBe("4");
-
-      await undoLast(
-        user,
-      );
-
-      expect(
-        getScore(
-          container,
-          "A",
-        ),
-      ).toBe("2");
-
-      expect(
-        getScore(
-          container,
-          "B",
-        ),
-      ).toBe("1");
-
-      expect(
-        screen.queryByText(
-          "Partida encerrada",
-        ),
-      ).not.toBeInTheDocument();
-
-      expect(
-        screen.queryByText(
-          /gabuada — césar/i,
-        ),
-      ).not.toBeInTheDocument();
-    },
-  );
-
-  it(
-    "encerra normalmente quando uma dupla chega a quatro pontos",
-    async () => {
-      const user =
-        userEvent.setup();
-
-      const { container } =
-        render(
-          <LiveGame
-            players={players}
-            teamA={teamA}
-            teamB={teamB}
-            onSave={() => {}}
-            onCancel={() => {}}
-            locate={async () =>
-              undefined
-            }
-          />,
-        );
-
-      await addPoints(
-        user,
-        "A",
-        4,
-      );
-
-      expect(
-        getScore(
-          container,
-          "A",
-        ),
-      ).toBe("4");
-
-      expect(
-        getScore(
-          container,
-          "B",
-        ),
-      ).toBe("0");
-
-      expect(
-        screen.getByText(
-          "Partida encerrada",
-        ),
-      ).toBeInTheDocument();
-    },
-  );
-
-  it(
-    "salva vencedores perdedores e placar de uma partida normal",
-    async () => {
-      const user =
-        userEvent.setup();
-
-      const onSave =
-        vi.fn();
-
-      render(
-        <LiveGame
-          players={players}
-          teamA={teamA}
-          teamB={teamB}
-          onSave={onSave}
-          onCancel={() => {}}
-          locate={async () =>
-            undefined
-          }
-        />,
-      );
-
-      await addPoints(
-        user,
-        "B",
-        3,
-      );
-
-      await addPoints(
-        user,
-        "A",
-        4,
-      );
-
-      await user.click(
-        screen.getByRole(
-          "button",
-          {
-            name: /salvar nos resultados/i,
-          },
-        ),
-      );
-
-      await waitFor(() => {
+        /*
+         * Gabuada também não salva
+         * automaticamente.
+         */
         expect(
           onSave,
-        ).toHaveBeenCalledOnce();
-      });
+        ).not.toHaveBeenCalled();
+      },
+    );
 
-      expect(
-        onSave,
-      ).toHaveBeenCalledWith(
-        expect.objectContaining({
-          winnerIds: [
-            "player-1",
-            "player-2",
-          ],
-          loserIds: [
-            "player-3",
-            "player-4",
-          ],
-          winnerScore: 4,
-          loserScore: 3,
-          gabuadaIds: [],
-          senaIds: [],
-        }),
-      );
-    },
-  );
+    it(
+      "desfaz a Gabuada restaurando o placar anterior",
+      async () => {
+        const {
+          user,
+        } = renderGame();
 
-  it(
-    "salva a Gabuada com placar quatro e registra o jogador que aplicou",
-    async () => {
-      const user =
-        userEvent.setup();
+        /*
+         * 2 × 1
+         */
+        await addPoint(
+          user,
+          "Dupla 01",
+        );
 
-      const onSave =
-        vi.fn();
+        await addPoint(
+          user,
+          "Dupla 01",
+        );
 
-      render(
-        <LiveGame
-          players={players}
-          teamA={teamA}
-          teamB={teamB}
-          onSave={onSave}
-          onCancel={() => {}}
-          locate={async () => ({
-            latitude: -15.7929,
-            longitude: -47.8496,
-          })}
-        />,
-      );
+        await addPoint(
+          user,
+          "Dupla 02",
+        );
 
-      await addPoints(
-        user,
-        "A",
-        2,
-      );
+        expect(
+          getScore(
+            "Dupla 01",
+          ),
+        ).toBe("2");
 
-      await addPoints(
-        user,
-        "B",
-        1,
-      );
+        expect(
+          getScore(
+            "Dupla 02",
+          ),
+        ).toBe("1");
 
-      await registerGabuada(
-        user,
-        "A",
-        "César",
-      );
+        await registerGabuada(
+          user,
+          "Dupla 01",
+          "César",
+        );
 
-      await user.click(
-        screen.getByRole(
-          "button",
-          {
-            name: /salvar nos resultados/i,
+        expect(
+          getScore(
+            "Dupla 01",
+          ),
+        ).toBe("4");
+
+        expect(
+          getScore(
+            "Dupla 02",
+          ),
+        ).toBe("1");
+
+        await undoLast(
+          user,
+        );
+
+        expect(
+          getScore(
+            "Dupla 01",
+          ),
+        ).toBe("2");
+
+        expect(
+          getScore(
+            "Dupla 02",
+          ),
+        ).toBe("1");
+
+        expect(
+          screen.queryByText(
+            "Partida encerrada",
+          ),
+        ).not.toBeInTheDocument();
+      },
+    );
+
+    it(
+      "salva o autor da Gabuada no resultado",
+      async () => {
+        const onSave =
+          vi.fn<SaveHandler>();
+
+        const {
+          user,
+        } = renderGame({
+          onSave,
+        });
+
+        await addPoint(
+          user,
+          "Dupla 01",
+        );
+
+        await addPoint(
+          user,
+          "Dupla 02",
+        );
+
+        await registerGabuada(
+          user,
+          "Dupla 01",
+          "César",
+        );
+
+        await user.click(
+          screen.getByRole(
+            "button",
+            {
+              name: /salvar nos resultados/i,
+            },
+          ),
+        );
+
+        await waitFor(
+          () => {
+            expect(
+              onSave,
+            ).toHaveBeenCalledOnce();
           },
-        ),
-      );
+        );
 
-      await waitFor(() => {
         expect(
           onSave,
-        ).toHaveBeenCalledOnce();
-      });
+        ).toHaveBeenCalledWith(
+          expect.objectContaining(
+            {
+              winnerIds: [
+                "player-1",
+                "player-2",
+              ],
 
-      expect(
-        onSave,
-      ).toHaveBeenCalledWith(
-        expect.objectContaining({
-          winnerIds: [
-            "player-1",
-            "player-2",
-          ],
-          loserIds: [
-            "player-3",
-            "player-4",
-          ],
-          winnerScore: 4,
-          loserScore: 1,
-          gabuadaIds: [
-            "player-1",
-          ],
-          senaIds: [],
-          latitude: -15.7929,
-          longitude: -47.8496,
-        }),
-      );
-    },
-  );
-});
+              loserIds: [
+                "player-3",
+                "player-4",
+              ],
+
+              winnerScore:
+                4,
+
+              loserScore:
+                1,
+
+              gabuadaIds: [
+                "player-1",
+              ],
+
+              senaIds:
+                [],
+            },
+          ),
+        );
+      },
+    );
+
+    it(
+      "reconhece uma virada depois de a dupla ficar atrás",
+      async () => {
+        const {
+          user,
+        } = renderGame();
+
+        /*
+         * Dupla 01 começa perdendo:
+         *
+         * 0 × 1
+         * 0 × 2
+         */
+        await addPoint(
+          user,
+          "Dupla 02",
+        );
+
+        await addPoint(
+          user,
+          "Dupla 02",
+        );
+
+        /*
+         * Reação:
+         *
+         * 1 × 2
+         * 2 × 2
+         * 3 × 2
+         */
+        await addPoint(
+          user,
+          "Dupla 01",
+        );
+
+        await addPoint(
+          user,
+          "Dupla 01",
+        );
+
+        await addPoint(
+          user,
+          "Dupla 01",
+        );
+
+        expect(
+          getScore(
+            "Dupla 01",
+          ),
+        ).toBe("3");
+
+        expect(
+          getScore(
+            "Dupla 02",
+          ),
+        ).toBe("2");
+
+        expect(
+          document.querySelector(
+            ".live-moment-banner-comeback",
+          ),
+        ).not.toBeNull();
+      },
+    );
+
+    it(
+      "sai diretamente quando a partida ainda não possui pontos",
+      async () => {
+        const onCancel =
+          vi.fn<CancelHandler>();
+
+        const {
+          user,
+        } = renderGame({
+          onCancel,
+        });
+
+        await user.click(
+          screen.getByRole(
+            "button",
+            {
+              name: /desistir/i,
+            },
+          ),
+        );
+
+        expect(
+          screen.queryByRole(
+            "dialog",
+          ),
+        ).not.toBeInTheDocument();
+
+        expect(
+          onCancel,
+        ).toHaveBeenCalledOnce();
+
+        expect(
+          getStoredLiveGame(),
+        ).toBeNull();
+      },
+    );
+  },
+);
