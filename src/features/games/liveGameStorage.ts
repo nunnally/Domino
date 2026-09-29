@@ -1,12 +1,9 @@
 export type TeamId = "A" | "B";
 
-export type MatchEventType =
-  | "point"
-  | "gabuada";
-
 export type MatchMoment =
   | "point"
   | "tie"
+  | "epic-tie"
   | "close"
   | "comeback"
   | "match-point"
@@ -24,7 +21,7 @@ export interface MomentContent {
 export interface MatchEvent {
   id: string;
 
-  type: MatchEventType;
+  type: "point" | "gabuada";
 
   team: TeamId;
 
@@ -32,12 +29,24 @@ export interface MatchEvent {
 
   createdAt: string;
 
+  /*
+   * Usados principalmente pela Gabuada.
+   *
+   * Como a Gabuada encerra imediatamente a partida,
+   * precisamos saber qual era o placar antes dela
+   * para que o botão "Desfazer" consiga restaurar
+   * corretamente a partida.
+   */
   previousScoreA?: number;
+
   previousScoreB?: number;
 
   /*
-   * Permite restaurar corretamente o banner
-   * anterior ao usar "Desfazer".
+   * Guarda o momento que estava sendo exibido
+   * antes deste evento.
+   *
+   * Isso permite que "Desfazer" restaure também
+   * o banner anterior da partida.
    */
   previousMoment?: MatchMoment | null;
 
@@ -47,56 +56,100 @@ export interface MatchEvent {
 }
 
 export interface StoredLiveGame {
+  /*
+   * Versão da estrutura salva no localStorage.
+   *
+   * Se no futuro a estrutura mudar de forma
+   * incompatível, podemos aumentar esta versão.
+   */
   version: 1;
 
+  /*
+   * IDs dos jogadores de cada dupla.
+   */
   teamA: string[];
+
   teamB: string[];
 
+  /*
+   * Placar atual.
+   */
   scoreA: number;
+
   scoreB: number;
 
+  /*
+   * Histórico dos acontecimentos da partida.
+   */
   events: MatchEvent[];
 
+  /*
+   * Momento atualmente exibido no banner.
+   *
+   * Exemplos:
+   *
+   * point
+   * tie
+   * epic-tie
+   * comeback
+   * match-point
+   * gabuada
+   * victory
+   */
   moment: MatchMoment | null;
 
+  /*
+   * Dupla responsável pelo momento atual.
+   */
   momentTeam: TeamId | null;
 
+  /*
+   * Texto sorteado para o banner atual.
+   *
+   * Salvamos isso para evitar que, ao atualizar
+   * a página, outra frase seja escolhida.
+   */
   momentContent: MomentContent | null;
 
+  /*
+   * Momento em que a partida começou.
+   */
   startedAt: string | null;
 
+  /*
+   * Última atualização da cópia temporária.
+   */
   updatedAt: string;
 }
 
-export const LIVE_GAME_STORAGE_KEY =
-  "domino-zaaaap:live-game:v1";
+const LIVE_GAME_STORAGE_KEY =
+  "domino-live-game";
 
-const MATCH_MOMENTS: MatchMoment[] = [
-  "point",
-  "tie",
-  "close",
-  "comeback",
-  "match-point",
-  "gabuada",
-  "gabuada-opening",
-  "gabuada-comeback",
-  "victory",
-  "dominant",
-];
+/*
+ * =====================================================
+ * VALIDADORES
+ * =====================================================
+ */
 
 const isTeamId = (
   value: unknown,
 ): value is TeamId =>
-  value === "A" ||
-  value === "B";
+  value === "A" || value === "B";
 
 const isMatchMoment = (
   value: unknown,
 ): value is MatchMoment =>
-  typeof value === "string" &&
-  MATCH_MOMENTS.includes(
-    value as MatchMoment,
-  );
+  value === "point" ||
+  value === "tie" ||
+  value === "epic-tie" ||
+  value === "close" ||
+  value === "comeback" ||
+  value === "match-point" ||
+  value === "gabuada" ||
+  value === "gabuada-opening" ||
+  value === "gabuada-comeback" ||
+  value === "victory" ||
+  value === "dominant";
 
 const isMomentContent = (
   value: unknown,
@@ -108,13 +161,13 @@ const isMomentContent = (
     return false;
   }
 
-  const content =
-    value as MomentContent;
+  const candidate =
+    value as Partial<MomentContent>;
 
   return (
-    typeof content.kicker ===
+    typeof candidate.kicker ===
       "string" &&
-    typeof content.title ===
+    typeof candidate.title ===
       "string"
   );
 };
@@ -129,180 +182,198 @@ const isMatchEvent = (
     return false;
   }
 
-  const event =
-    value as MatchEvent;
+  const candidate =
+    value as Partial<MatchEvent>;
 
-  return (
-    typeof event.id ===
-      "string" &&
-    (event.type === "point" ||
-      event.type === "gabuada") &&
-    isTeamId(event.team) &&
-    typeof event.createdAt ===
+  if (
+    typeof candidate.id !==
+      "string" ||
+    (candidate.type !== "point" &&
+      candidate.type !==
+        "gabuada") ||
+    !isTeamId(candidate.team) ||
+    typeof candidate.createdAt !==
       "string"
-  );
+  ) {
+    return false;
+  }
+
+  if (
+    candidate.playerId !==
+      undefined &&
+    typeof candidate.playerId !==
+      "string"
+  ) {
+    return false;
+  }
+
+  if (
+    candidate.previousScoreA !==
+      undefined &&
+    typeof candidate.previousScoreA !==
+      "number"
+  ) {
+    return false;
+  }
+
+  if (
+    candidate.previousScoreB !==
+      undefined &&
+    typeof candidate.previousScoreB !==
+      "number"
+  ) {
+    return false;
+  }
+
+  if (
+    candidate.previousMoment !==
+      undefined &&
+    candidate.previousMoment !==
+      null &&
+    !isMatchMoment(
+      candidate.previousMoment,
+    )
+  ) {
+    return false;
+  }
+
+  if (
+    candidate.previousMomentTeam !==
+      undefined &&
+    candidate.previousMomentTeam !==
+      null &&
+    !isTeamId(
+      candidate.previousMomentTeam,
+    )
+  ) {
+    return false;
+  }
+
+  if (
+    candidate.previousMomentContent !==
+      undefined &&
+    candidate.previousMomentContent !==
+      null &&
+    !isMomentContent(
+      candidate.previousMomentContent,
+    )
+  ) {
+    return false;
+  }
+
+  return true;
 };
 
-export const getStoredLiveGame =
-  (): StoredLiveGame | null => {
-    if (
-      typeof window ===
-      "undefined"
-    ) {
-      return null;
-    }
+const isStoredLiveGame = (
+  value: unknown,
+): value is StoredLiveGame => {
+  if (
+    !value ||
+    typeof value !== "object"
+  ) {
+    return false;
+  }
 
-    try {
-      const raw =
-        window.localStorage.getItem(
-          LIVE_GAME_STORAGE_KEY,
-        );
+  const candidate =
+    value as Partial<StoredLiveGame>;
 
-      if (!raw) {
-        return null;
-      }
+  if (candidate.version !== 1) {
+    return false;
+  }
 
-      const parsed = JSON.parse(
-        raw,
-      ) as Partial<StoredLiveGame>;
+  if (
+    !Array.isArray(candidate.teamA) ||
+    !candidate.teamA.every(
+      (id) => typeof id === "string",
+    )
+  ) {
+    return false;
+  }
 
-      if (
-        parsed.version !== 1
-      ) {
-        return null;
-      }
+  if (
+    !Array.isArray(candidate.teamB) ||
+    !candidate.teamB.every(
+      (id) => typeof id === "string",
+    )
+  ) {
+    return false;
+  }
 
-      if (
-        !Array.isArray(
-          parsed.teamA,
-        ) ||
-        !Array.isArray(
-          parsed.teamB,
-        )
-      ) {
-        return null;
-      }
+  if (
+    typeof candidate.scoreA !==
+      "number" ||
+    typeof candidate.scoreB !==
+      "number"
+  ) {
+    return false;
+  }
 
-      if (
-        !parsed.teamA.every(
-          (id) =>
-            typeof id ===
-            "string",
-        ) ||
-        !parsed.teamB.every(
-          (id) =>
-            typeof id ===
-            "string",
-        )
-      ) {
-        return null;
-      }
+  if (
+    !Array.isArray(candidate.events) ||
+    !candidate.events.every(
+      isMatchEvent,
+    )
+  ) {
+    return false;
+  }
 
-      if (
-        typeof parsed.scoreA !==
-          "number" ||
-        !Number.isFinite(
-          parsed.scoreA,
-        ) ||
-        typeof parsed.scoreB !==
-          "number" ||
-        !Number.isFinite(
-          parsed.scoreB,
-        )
-      ) {
-        return null;
-      }
+  if (
+    candidate.moment !== null &&
+    candidate.moment !== undefined &&
+    !isMatchMoment(candidate.moment)
+  ) {
+    return false;
+  }
 
-      const events =
-        Array.isArray(
-          parsed.events,
-        )
-          ? parsed.events.filter(
-              isMatchEvent,
-            )
-          : [];
+  if (
+    candidate.momentTeam !== null &&
+    candidate.momentTeam !==
+      undefined &&
+    !isTeamId(candidate.momentTeam)
+  ) {
+    return false;
+  }
 
-      const moment =
-        parsed.moment &&
-        isMatchMoment(
-          parsed.moment,
-        )
-          ? parsed.moment
-          : null;
+  if (
+    candidate.momentContent !== null &&
+    candidate.momentContent !==
+      undefined &&
+    !isMomentContent(
+      candidate.momentContent,
+    )
+  ) {
+    return false;
+  }
 
-      const momentTeam =
-        isTeamId(
-          parsed.momentTeam,
-        )
-          ? parsed.momentTeam
-          : null;
+  if (
+    candidate.startedAt !== null &&
+    candidate.startedAt !==
+      undefined &&
+    typeof candidate.startedAt !==
+      "string"
+  ) {
+    return false;
+  }
 
-      const momentContent =
-        isMomentContent(
-          parsed.momentContent,
-        )
-          ? parsed.momentContent
-          : null;
+  if (
+    typeof candidate.updatedAt !==
+    "string"
+  ) {
+    return false;
+  }
 
-      return {
-        version: 1,
+  return true;
+};
 
-        teamA:
-          parsed.teamA,
-
-        teamB:
-          parsed.teamB,
-
-        scoreA: Math.max(
-          0,
-          parsed.scoreA,
-        ),
-
-        scoreB: Math.max(
-          0,
-          parsed.scoreB,
-        ),
-
-        events,
-
-        moment,
-
-        momentTeam,
-
-        momentContent,
-
-        startedAt:
-          typeof parsed.startedAt ===
-          "string"
-            ? parsed.startedAt
-            : null,
-
-        updatedAt:
-          typeof parsed.updatedAt ===
-          "string"
-            ? parsed.updatedAt
-            : new Date().toISOString(),
-      };
-    } catch (error) {
-      console.warn(
-        "Não foi possível recuperar a partida salva:",
-        error,
-      );
-
-      return null;
-    }
-  };
+/*
+ * =====================================================
+ * SALVAR
+ * =====================================================
+ */
 
 export const saveStoredLiveGame = (
   game: StoredLiveGame,
 ) => {
-  if (
-    typeof window ===
-    "undefined"
-  ) {
-    return;
-  }
-
   try {
     window.localStorage.setItem(
       LIVE_GAME_STORAGE_KEY,
@@ -310,28 +381,66 @@ export const saveStoredLiveGame = (
     );
   } catch (error) {
     console.warn(
-      "Não foi possível salvar a partida localmente:",
+      "Não foi possível salvar a partida em andamento:",
       error,
     );
   }
 };
 
+/*
+ * =====================================================
+ * RECUPERAR
+ * =====================================================
+ */
+
+export const getStoredLiveGame =
+  (): StoredLiveGame | null => {
+    try {
+      const stored =
+        window.localStorage.getItem(
+          LIVE_GAME_STORAGE_KEY,
+        );
+
+      if (!stored) {
+        return null;
+      }
+
+      const parsed: unknown =
+        JSON.parse(stored);
+
+      if (!isStoredLiveGame(parsed)) {
+        console.warn(
+          "Partida salva possui formato inválido. O registro temporário será removido.",
+        );
+
+        clearStoredLiveGame();
+
+        return null;
+      }
+
+      return parsed;
+    } catch (error) {
+      console.warn(
+        "Não foi possível recuperar a partida em andamento:",
+        error,
+      );
+
+      clearStoredLiveGame();
+
+      return null;
+    }
+  };
+
+
 export const clearStoredLiveGame =
   () => {
-    if (
-      typeof window ===
-      "undefined"
-    ) {
-      return;
-    }
-
     try {
       window.localStorage.removeItem(
         LIVE_GAME_STORAGE_KEY,
       );
     } catch (error) {
       console.warn(
-        "Não foi possível limpar a partida salva:",
+        "Não foi possível remover a partida em andamento:",
         error,
       );
     }
