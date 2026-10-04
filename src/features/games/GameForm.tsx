@@ -4,9 +4,11 @@ import {
   ArrowLeft,
   ChevronDown,
   ClipboardPenLine,
+  FaceSlightlyFrowning,
   MapPin,
   Play,
   Save,
+  Trophy,
   Zap,
 } from "lucide-react";
 
@@ -803,8 +805,8 @@ export function GameForm({
         onSubmit={submit}
       >
         <section className="team-block winners-block">
-          <span className="team-number">
-            01
+          <span className="team-watermark" aria-hidden="true">
+            <Trophy strokeWidth={1.8} />
           </span>
 
           <div className="team-heading">
@@ -843,8 +845,8 @@ export function GameForm({
         </div>
 
         <section className="team-block losers-block">
-          <span className="team-number">
-            02
+          <span className="team-watermark" aria-hidden="true">
+            <FaceSlightlyFrowning strokeWidth={1.8} />
           </span>
 
           <div className="team-heading">

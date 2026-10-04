@@ -1806,14 +1806,28 @@ input:focus-visible {
   background: var(--violet);
   transform: rotate(0.4deg);
 }
-.team-number {
+.team-watermark {
   position: absolute;
-  right: 18px;
-  top: 12px;
-  font-size: 48px;
-  line-height: 1;
-  font-weight: 700;
-  opacity: 0.2;
+  inset: 0;
+  overflow: hidden;
+  color: var(--ink);
+  opacity: 0.09;
+  pointer-events: none;
+}
+.team-watermark svg {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  width: clamp(120px, 13vw, 170px);
+  height: auto;
+  transform: rotate(-12deg);
+}
+.losers-block .team-watermark svg {
+  transform: rotate(10deg);
+}
+.team-heading,
+.player-selects {
+  position: relative;
 }
 .team-heading h2 {
   margin: 18px 0 24px;
