@@ -9,7 +9,10 @@ interface HistoryPageProps {
 export function HistoryPage({ players, games }: HistoryPageProps) {
   const names = new Map(players.map((player) => [player.id, player.name]))
   const orderedGames = [...games].sort((a, b) => new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime())
-  const pairLabel = (ids: [string, string]) => ids.map((id) => names.get(id) ?? 'Desconhecido').join(' & ')
+  const pairLabel = (ids: [string, string]) => ids
+    .map((id) => names.get(id) ?? 'Desconhecido')
+    .sort((a, b) => a.localeCompare(b, 'pt-BR'))
+    .join(' & ')
 
   return (
     <section className="page-wrap inner-page">
