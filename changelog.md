@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-13
+
+- Adicionada a imagem enviada aos assets públicos em `assets/cesar.jpg` e atualizada a foto do César no cadastro, com migração correspondente no Supabase.
+
 ## 2026-10-04
 
 - Nomes dos jogadores em cada dupla do histórico exibidos em ordem alfabética, para vencedores e perdedores.
